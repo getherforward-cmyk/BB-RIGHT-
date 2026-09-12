@@ -236,9 +236,9 @@ let state = {
   posts: [], wishes: [], polls: [],
   settings: { wishOpen:false, wishDeadline:null, councilPin: DEFAULT_PIN, lastResetMonth:null },
   mine: { likedPosts:[], votedPolls:[], ratedPolls:[] },
-  tab: "feed", isCouncil:false,
-  draft: { postText:"", postCat: CATEGORIES[0].name, wishText:"", pinInput:"", pinError:"",
-           pollTitle:"", pollOpts:["",""], newPin:"",
+  tab: "feed", isCouncil:false, councilView:"dashboard",
+  draft: { postText:"", postCat: CATEGORIES[0].name, postName:"", wishText:"", pinInput:"", pinError:"",
+           pollTitle:"", pollOpts:["",""],
            feedFilterCat:"all", feedSearchText:"" }
 };
 
@@ -324,9 +324,11 @@ function showToast(msg){
 async function addPost(){
   const text = state.draft.postText.trim();
   if(!text) return;
-  const post = { id:uid(), text, category:state.draft.postCat, likes:0, ts:Date.now() };
-  state.draft.postText = "";
+  const name = state.draft.postName.trim();
+  const post = { id:uid(), text, name, category:state.draft.postCat, likes:0, ts:Date.now() };
+  state.draft.postText = ""; state.draft.postName = "";
   await persist("posts-data","posts",[post, ...state.posts], true, "ส่งความเห็นสำเร็จ");
+  state.mine.myPosts.push(post.id); await saveJSON("my-interactions",state.mine,false);
 }
 async function likePost(id){
   if(state.mine.likedPosts.includes(id)) return;
@@ -355,12 +357,6 @@ async function updateDeadline(val){
   const next = {...state.settings, wishDeadline: val || null};
   await persist("settings-data","settings", next, true);
 }
-async function changePin(){
-  const p = state.draft.newPin.trim();
-  if(p.length<4) return;
-  state.draft.newPin="";
-  await persist("settings-data","settings", {...state.settings, councilPin:p}, true, "เปลี่ยนรหัสผ่านสำเร็จ");
-}
 async function addPoll(){
   const title = state.draft.pollTitle.trim();
   const opts = state.draft.pollOpts.map(o=>o.trim()).filter(Boolean);
@@ -379,6 +375,9 @@ async function vote(pollId, optId){
 }
 async function endPoll(id){
   await persist("polls-data","polls", state.polls.map(p=>p.id===id?{...p,status:"ended"}:p), true, "จบกิจกรรมสำเร็จ");
+}
+async function deletePoll(id){
+  await persist("polls-data","polls", state.polls.filter(p=>p.id!==id), true, "ลบกิจกรรมโหวตสำเร็จ");
 }
 async function submitFeedback(pollId, rating, comment){
   if(state.mine.ratedPolls.includes(pollId) || rating<1) return;
@@ -442,17 +441,18 @@ function renderFeedPostsList(posts){
   const filterCat = state.draft.feedFilterCat;
   const q = state.draft.feedSearchText.trim().toLowerCase();
   const filtered = posts.filter(p =>
-    (filterCat==="all" || p.category===filterCat) &&
+    (filterCat==="all" || (filterCat==="mine" ? state.mine.myPosts.includes(p.id) : p.category===filterCat)) &&
     (!q || p.text.toLowerCase().includes(q))
   );
   if(posts.length===0) return `<div class="empty">ยังไม่มีใครพูดอะไร เป็นคนแรกที่เริ่มบทสนทนาสิ</div>`;
-  if(filtered.length===0) return `<div class="empty">ไม่พบความคิดเห็นที่ตรงกับหมวดหมู่หรือคำค้นหา</div>`;
+  if(filtered.length===0) return `<div class="empty">${filterCat==="mine" ? "คุณยังไม่เคยส่งความเห็น" : "ไม่พบความคิดเห็นที่ตรงกับหมวดหมู่หรือคำค้นหา"}</div>`;
   return filtered.map(p=>`
       <div class="post">
         <div class="row">
           <span class="tag" style="background:${catColor(p.category)}1a;color:${catColor(p.category)}"><span class="dot" style="background:${catColor(p.category)}"></span>${esc(p.category)}</span>
           ${state.isCouncil ? `<button class="btn-ghost" onclick="deletePost('${p.id}')">${ICONS.trash}</button>` : ""}
         </div>
+        ${p.name ? `<div style="font-size:12.5px;font-weight:600;color:var(--navy);margin-top:6px;">${esc(p.name)}</div>` : ""}
         <div class="post-text">${esc(p.text)}</div>
         <div class="post-foot">
           <span class="time">${timeAgo(p.ts)}</span>
@@ -473,6 +473,7 @@ function renderFeed(){
   <div class="stack">
     <div class="card">
       ${cardTitle("feed","เสียงของท่านสำคัญ เราพร้อมรับฟังเสมอ")}
+      <input id="postName" class="field" style="margin-bottom:8px;" placeholder="ชื่อ (ถ้าไม่อยากระบุ ปล่อยว่างได้)" value="${esc(state.draft.postName)}" />
       <textarea id="postText" class="field" rows="3" placeholder="อยากบอกอะไรโรงเรียนบ้าง พิมพ์ได้เลย ไม่มีใครรู้ว่าเป็นใคร...">${esc(state.draft.postText)}</textarea>
       <div class="row" style="margin-top:10px;">
         <select id="postCat" class="field">
@@ -492,6 +493,7 @@ function renderFeed(){
       <div class="row" style="gap:8px;flex-wrap:wrap;">
         <select id="feedFilterCat" class="field" style="flex:1;min-width:130px;">
           <option value="all" ${state.draft.feedFilterCat==="all"?"selected":""}>ทุกหมวดหมู่</option>
+          <option value="mine" ${state.draft.feedFilterCat==="mine"?"selected":""}>ความเห็นที่ฉันส่ง</option>
           ${CATEGORIES.map(c=>`<option value="${esc(c.name)}" ${state.draft.feedFilterCat===c.name?"selected":""}>${esc(c.name)}</option>`).join("")}
         </select>
         <input id="feedSearchInput" class="field" style="flex:2;min-width:150px;" placeholder="ค้นหาความคิดเห็นที่น่าสนใจ..." value="${esc(state.draft.feedSearchText)}" />
@@ -507,7 +509,7 @@ function renderWish(){
   return `
   <div class="stack">
     <div class="card" style="background:linear-gradient(160deg,var(--navy),var(--navy-2));border:none;">
-      <div class="card-title" style="color:#fff;"><span class="icon-chip" style="background:rgba(255,255,255,.16);">${ICONS.wish}</span>Gather Wish — อยากให้โรงเรียนแก้อะไร</div>
+      <div class="card-title" style="color:#fff;"><span class="icon-chip" style="background:rgba(255,255,255,.16);">${ICONS.wish}</span>Gather Wish — คำขอของท่านคืออะไร</div>
       <p style="color:#C7D2E0;font-size:13px;margin:0;">ช่วงนี้สภานักเรียนเปิดรับไอเดียนโยบายที่อยากให้โรงเรียนปรับปรุง เขียนมาได้เต็มที่</p>
       ${state.settings.wishDeadline ? `<div style="display:flex;align-items:center;gap:6px;margin-top:10px;color:#C7D2E0;font-size:12px;">${ICONS.clock} ปิดรับภายใน ${new Date(state.settings.wishDeadline).toLocaleString("th-TH",{dateStyle:"medium",timeStyle:"short"})}</div>` : ""}
     </div>
@@ -520,14 +522,7 @@ function renderWish(){
       </div>
     </div>` : `<div class="card empty">ตอนนี้ยังไม่เปิดรับไอเดียใหม่ รอสภานักเรียนเปิดรอบถัดไป</div>`}
 
-    ${state.wishes.length===0 ? `<div class="empty">ยังไม่มีไอเดียถูกส่งเข้ามา</div>` : state.wishes.map(w=>`
-      <div class="post">
-        <div class="row" style="align-items:flex-start;">
-          <div class="post-text" style="margin:0;flex:1;">${esc(w.text)}</div>
-          ${state.isCouncil ? `<button class="btn-ghost" onclick="deleteWish('${w.id}')">${ICONS.trash}</button>` : ""}
-        </div>
-        <div class="time" style="margin-top:6px;">${timeAgo(w.ts)}</div>
-      </div>`).join("")}
+    <div class="empty" style="font-size:12.5px;">ไอเดียที่ส่งเข้ามาจะถูกส่งตรงถึงสภานักเรียนเท่านั้น ผู้ใช้คนอื่นจะไม่เห็นข้อความของคุณ</div>
   </div>`;
 }
 
@@ -563,7 +558,10 @@ function pollCard(poll){
   <div class="card">
     <div class="row">
       <span style="font-weight:600;color:var(--navy);font-size:15px;">${esc(poll.title)}</span>
-      <span class="tag" style="background:${poll.status==="active"?"#E5F5EA":"#F1F1F1"};color:${poll.status==="active"?"#2E8B4F":"var(--muted)"}">${poll.status==="active"?"กำลังโหวต":"จบกิจกรรมแล้ว"}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="tag" style="background:${poll.status==="active"?"#E5F5EA":"#F1F1F1"};color:${poll.status==="active"?"#2E8B4F":"var(--muted)"}">${poll.status==="active"?"กำลังโหวต":"จบกิจกรรมแล้ว"}</span>
+        ${state.isCouncil ? `<button class="btn-ghost" onclick="deletePoll('${poll.id}')">${ICONS.trash}</button>` : ""}
+      </div>
     </div>
     <div style="margin-top:12px;">${optionsHtml}</div>
     ${showResults ? `<div style="font-size:11.5px;color:var(--muted);">รวม ${total===1 && poll.options.every(o=>o.votes===0)?0:total} โหวต</div>` : ""}
@@ -607,7 +605,7 @@ function renderCouncilLogin(){
 }
 
 function renderCouncilDashboard(){
-  const topPosts = [...state.posts].sort((a,b)=>b.likes-a.likes).slice(0,5);
+  const topPosts = [...state.posts].sort((a,b)=>b.likes-a.likes).slice(0,3);
   const sortedCats = [...CATEGORIES].map(c=>({...c,count:state.posts.filter(p=>p.category===c.name).length})).sort((a,b)=>b.count-a.count);
   const max = Math.max(1, ...sortedCats.map(c=>c.count));
   return `
@@ -630,7 +628,7 @@ function renderCouncilDashboard(){
       </div>
       <div style="font-size:13px;color:var(--navy);font-weight:600;margin-bottom:6px;">ความเห็นที่ได้รับความสนใจสูงสุด</div>
       ${topPosts.length===0 ? `<div style="font-size:13px;color:var(--muted);">ยังไม่มีข้อมูล</div>` :
-        topPosts.map(p=>`<div style="font-size:13px;padding:6px 0;border-top:1px solid var(--line);"><span style="color:var(--orange);font-weight:600;">♥ ${p.likes}</span> — ${esc(p.text.slice(0,70))}${p.text.length>70?"…":""}</div>`).join("")}
+        topPosts.map(p=>`<div style="font-size:13px;padding:6px 0;border-top:1px solid var(--line);"><span style="color:var(--orange);font-weight:600;">♥ ${p.likes}</span> — ${esc(p.text.slice(0,70))}${p.text.length>70?"…":""} <span style="color:var(--muted);">(${p.name?esc(p.name):"ไม่ระบุชื่อ"})</span></div>`).join("")}
     </div>
 
     <div class="card">
@@ -641,7 +639,10 @@ function renderCouncilDashboard(){
       </div>
       <label style="font-size:12px;color:var(--muted);">กำหนดวัน-เวลาปิดรับ (ไม่บังคับ)</label>
       <input type="datetime-local" class="field" id="deadlineInput" value="${state.settings.wishDeadline ? state.settings.wishDeadline.slice(0,16) : ""}" />
-      <div style="font-size:12px;color:var(--muted);margin-top:6px;">ตอนนี้มีไอเดียส่งเข้ามาแล้ว ${state.wishes.length} รายการ</div>
+      <div class="row" style="margin-top:10px;">
+        <span style="font-size:12px;color:var(--muted);">ตอนนี้มีไอเดียส่งเข้ามาแล้ว ${state.wishes.length} รายการ</span>
+        <button class="btn btn-outline" onclick="openWishArchive()">${ICONS.wish} ดูคลังคำขอทั้งหมด</button>
+      </div>
     </div>
 
     <div class="card">
@@ -659,17 +660,30 @@ function renderCouncilDashboard(){
         <button class="btn btn-orange" id="createPollBtn">${ICONS.send} เปิดโหวต</button>
       </div>
     </div>
-
-    <div class="card">
-      ${cardTitle("lock","เปลี่ยนรหัสผ่านสภานักเรียน")}
-      <div style="display:flex;gap:8px;">
-        <input id="newPinInput" class="field" placeholder="ตั้งรหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)" value="${esc(state.draft.newPin)}" style="flex:1;" />
-        <button class="btn btn-navy" id="savePinBtn">บันทึก</button>
-      </div>
-    </div>
   </div>`;
 }
-function exitCouncil(){ state.isCouncil=false; render(); }
+function exitCouncil(){ state.isCouncil=false; state.councilView="dashboard"; render(); }
+function openWishArchive(){ state.councilView="archive"; render(); }
+function closeWishArchive(){ state.councilView="dashboard"; render(); }
+
+function renderCouncilWishArchive(){
+  return `
+  <div class="stack">
+    <div class="row">
+      <div class="card-title" style="margin:0;"><span class="icon-chip">${ICONS.wish}</span>คลังคำขอ Gather Wish</div>
+      <button class="btn-ghost" onclick="closeWishArchive()">${ICONS.unlock}</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin:-6px 0 0;">รวมคำขอทั้งหมด ${state.wishes.length} รายการจากทุกคน</div>
+    ${state.wishes.length===0 ? `<div class="empty">ยังไม่มีไอเดียถูกส่งเข้ามา</div>` : state.wishes.map(w=>`
+      <div class="post">
+        <div class="row" style="align-items:flex-start;">
+          <div class="post-text" style="margin:0;flex:1;">${esc(w.text)}</div>
+          <button class="btn-ghost" onclick="deleteWish('${w.id}')">${ICONS.trash}</button>
+        </div>
+        <div class="time" style="margin-top:6px;">${timeAgo(w.ts)}</div>
+      </div>`).join("")}
+  </div>`;
+}
 
 function addPollOpt(){ state.draft.pollOpts.push(""); render(); }
 function removePollOpt(i){ state.draft.pollOpts.splice(i,1); render(); }
@@ -690,7 +704,7 @@ function render(){
   if(state.tab==="feed") body = renderFeed();
   else if(state.tab==="wish") body = renderWish();
   else if(state.tab==="vote") body = renderVote();
-  else if(state.tab==="council") body = state.isCouncil ? renderCouncilDashboard() : renderCouncilLogin();
+  else if(state.tab==="council") body = state.isCouncil ? (state.councilView==="archive" ? renderCouncilWishArchive() : renderCouncilDashboard()) : renderCouncilLogin();
 
   app.innerHTML = `
     ${renderHero()}
@@ -702,6 +716,7 @@ function render(){
 
 function attachHandlers(){
   bind("postText","input",e=>{ state.draft.postText = e.target.value; });
+  bind("postName","input",e=>{ state.draft.postName = e.target.value; });
   bind("postCat","change",e=>{ state.draft.postCat = e.target.value; });
   bind("postBtn","click", addPost);
   bind("feedFilterCat","change",e=>{ state.draft.feedFilterCat = e.target.value; updateFeedList(); });
@@ -720,8 +735,6 @@ function attachHandlers(){
     inp.addEventListener("input", e=>{ state.draft.pollOpts[Number(e.target.dataset.idx)] = e.target.value; });
   });
   bind("createPollBtn","click", addPoll);
-  bind("newPinInput","input",e=>{ state.draft.newPin = e.target.value; });
-  bind("savePinBtn","click", changePin);
 }
 
 /* ---------------- init ---------------- */
@@ -731,10 +744,10 @@ async function init(){
     loadJSON("wishes-data",true,{wishes:[]}),
     loadJSON("polls-data",true,{polls:[]}),
     loadJSON("settings-data",true,{wishOpen:false,wishDeadline:null,councilPin:DEFAULT_PIN,lastResetMonth:null}),
-    loadJSON("my-interactions",false,{likedPosts:[],votedPolls:[],ratedPolls:[]}),
+    loadJSON("my-interactions",false,{likedPosts:[],votedPolls:[],ratedPolls:[],myPosts:[]}),
   ]);
   state.posts = p.posts||[]; state.wishes = w.wishes||[]; state.polls = pl.polls||[];
-  state.settings = s; state.mine = m;
+  state.settings = s; state.mine = m; if(!state.mine.myPosts) state.mine.myPosts = [];
   if(!state.settings.lastResetMonth) state.settings.lastResetMonth = monthKey();
   await checkMonthlyReset();
   render();
