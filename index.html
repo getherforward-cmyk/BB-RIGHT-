@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BB RIGHT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#142B45; --navy-2:#1F4067; --orange:#E8792F; --orange-d:#C85F1D;
+    --sky:#4FA9DC; --amber:#F4B740; --bg:#F6F5F1; --surface:#FFFFFF;
+    --ink:#1F2933; --muted:#7A8899; --line:#E7E9EC; --accent:#E8792F;
+  }
+  *{box-sizing:border-box;}
+  svg{width:16px;height:16px;flex-shrink:0;display:inline-block;vertical-align:middle;}
+  .star-btn svg{width:20px;height:20px;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',sans-serif;}
+  h1,h2,h3,.disp{font-family:'Kanit',sans-serif;}
+  button,input,textarea,select{font-family:'Sarabun',sans-serif;}
+  ::selection{background:var(--amber);color:var(--navy);}
+
+  #app{max-width:640px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:92px;}
+
+  /* ---------- hero ---------- */
+  .hero{
+    background:linear-gradient(160deg,var(--navy) 0%,var(--navy-2) 100%);
+    padding:26px 20px 68px;position:relative;overflow:hidden;
+    border-radius:0 0 28px 28px;
+  }
+  .hero-net{position:absolute;top:-16px;right:-16px;width:170px;height:150px;opacity:.16;pointer-events:none;}
+  .hero-top{display:flex;align-items:center;gap:13px;position:relative;z-index:1;}
+  .badge{
+    width:54px;height:54px;border-radius:17px;flex-shrink:0;position:relative;
+    background:linear-gradient(150deg,#2A4E78 0%,var(--navy) 65%);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px rgba(10,22,38,.45),inset 0 0 0 1px rgba(255,255,255,.14);
+  }
+  .badge svg{width:32px;height:32px;}
+  .login-icon svg{width:36px;height:36px;}
+  .hero-title{color:#fff;font-weight:700;font-size:23px;letter-spacing:.3px;line-height:1.1;font-family:'Kanit';}
+  .hero-title .hl{color:var(--orange);}
+  .hero-sub{color:#C7D2E0;font-size:12.5px;margin-top:2px;}
+  .hero-stats{display:flex;gap:10px;margin-top:22px;position:relative;z-index:1;}
+  .hero-stat{
+    flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;padding:10px 12px;backdrop-filter:blur(2px);
+  }
+  .hero-stat b{color:#fff;font-size:18px;display:block;font-family:'Kanit';}
+  .hero-stat span{color:#C7D2E0;font-size:11px;}
+
+  /* ---------- content ---------- */
+  .content{padding:0 16px;margin-top:-40px;position:relative;z-index:2;}
+  .stack{display:flex;flex-direction:column;gap:14px;}
+
+  .card{
+    background:var(--surface);border-radius:18px;padding:16px 16px;
+    border:1px solid var(--line);border-top:3px solid var(--accent);
+  }
+  .card-title{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--navy);font-size:14.5px;margin-bottom:13px;}
+  .icon-chip{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--accent);}
+  .icon-chip svg{width:16px;height:16px;stroke:#fff;color:#fff;}
+
+  .bubble{position:relative;padding-left:14px;}
+  .bubble::before{
+    content:'';position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:4px;
+  }
+
+  textarea.field,input.field{
+    width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;
+    font-size:14px;outline:none;background:#FCFCFB;color:var(--ink);transition:border-color .15s;
+  }
+  textarea.field{resize:vertical;min-height:70px;}
+  textarea.field:focus,input.field:focus{border-color:var(--orange);background:#fff;}
+  select.field{
+    border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;
+    background:#FCFCFB;color:var(--ink);outline:none;
+  }
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+
+  .btn{border:none;border-radius:999px;font-weight:600;font-size:13.5px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:6px;padding:10px 18px;transition:transform .1s ease,box-shadow .15s;}
+  .btn:active{transform:scale(.97);}
+  .btn-orange{background:var(--orange);color:#fff;box-shadow:0 4px 12px rgba(232,121,47,.32);}
+  .btn-orange:hover{background:var(--orange-d);}
+  .btn-navy{background:var(--navy);color:#fff;}
+  .btn-outline{background:#fff;color:var(--navy);border:1.5px solid var(--line);}
+  .btn-outline:hover{border-color:var(--navy);}
+  .btn-ghost{background:transparent;color:var(--muted);padding:6px;border-radius:8px;}
+  .btn-ghost:hover{background:#F1F3F5;}
+  .btn[disabled]{opacity:.55;cursor:default;}
+
+  .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:600;}
+  .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+  .bar-row{display:flex;align-items:center;gap:10px;}
+  .bar-label{width:132px;font-size:12px;color:var(--muted);flex-shrink:0;}
+  .bar-track{flex:1;background:#EEF1F4;border-radius:6px;height:9px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
+  .bar-val{width:22px;text-align:right;font-size:12px;color:var(--navy);font-weight:600;}
+
+  .post{background:var(--surface);border-radius:16px;padding:14px 16px 12px;border:1px solid var(--line);position:relative;}
+  .post-text{margin:9px 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink);white-space:pre-wrap;}
+  .post-foot{display:flex;justify-content:space-between;align-items:center;}
+  .time{font-size:11.5px;color:var(--muted);}
+  .like{display:inline-flex;align-items:center;gap:5px;background:none;border:none;font-size:13px;cursor:pointer;color:var(--muted);}
+  .like.liked{color:var(--orange);}
+
+  .empty{text-align:center;color:var(--muted);font-size:13.5px;padding:30px 10px;}
+
+  .option-btn{width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);padding:11px 13px;
+    border-radius:12px;font-size:13.5px;cursor:pointer;color:var(--ink);margin-bottom:8px;transition:border-color .15s;}
+  .option-btn:hover{border-color:var(--orange);}
+  .result-row{position:relative;background:#EEF1F4;border-radius:12px;overflow:hidden;padding:10px 13px;margin-bottom:8px;}
+  .result-fill{position:absolute;inset:0;background:rgba(79,169,220,.22);}
+  .result-inner{position:relative;display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink);}
+
+  .stars{display:flex;gap:3px;}
+  .star-btn{background:none;border:none;cursor:pointer;padding:2px;}
+
+  .navlink-row{display:flex;gap:6px;}
+
+  /* bottom nav */
+  .bottomnav{
+    position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:calc(100% - 32px);max-width:576px;
+    background:var(--navy);border-radius:20px;display:flex;padding:8px;box-shadow:0 12px 30px rgba(20,43,69,.35);
+    z-index:50;
+  }
+  .navbtn{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border-radius:14px;
+    background:transparent;border:none;cursor:pointer;color:#B8C4D4;font-size:10.5px;font-family:'Sarabun';
+  }
+  .navbtn.active{background:rgba(255,255,255,.12);color:#fff;}
+  .navbtn svg{width:19px;height:19px;}
+  .navbtn.active::after{content:'';width:4px;height:4px;border-radius:50%;background:var(--accent);margin-top:1px;}
+
+  .login-card{text-align:center;padding:34px 20px;}
+  .login-card input{max-width:220px;margin:14px auto 0;text-align:center;}
+  .err{color:#D65C4A;font-size:12.5px;margin-top:6px;}
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-18px);
+    background:var(--navy);color:#fff;padding:11px 20px 11px 14px;border-radius:999px;
+    display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;
+    box-shadow:0 12px 28px rgba(20,43,69,.4);opacity:0;pointer-events:none;
+    transition:opacity .25s ease,transform .25s ease;z-index:200;max-width:88%;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast-icon{
+    width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    background:var(--orange);border-radius:50%;padding:4px;
+  }
+  .toast-icon svg{width:12px;height:12px;stroke:#fff;color:#fff;}
+
+  @media (min-width:640px){ #app{padding-bottom:30px;} .bottomnav{position:static;transform:none;width:100%;margin:24px 16px 0;box-shadow:none;} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ---------- Firebase ---------- -->
+<script>
+  // สร้าง Promise ไว้ล่วงหน้าแบบ sync ก่อน เพื่อกันปัญหา module script (ด้านล่าง) โหลดช้ากว่าสคริปต์หลัก
+  window.__fbReady = new Promise((resolve)=>{ window.__fbResolveReady = resolve; });
+</script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDVbgRKBdU268hgGyk_9mwZHge9jkEH_y4",
+    authDomain: "bb-right.firebaseapp.com",
+    projectId: "bb-right",
+    storageBucket: "bb-right.firebasestorage.app",
+    messagingSenderId: "678551506305",
+    appId: "1:678551506305:web:7cd9e2486ebbfdea3cac80"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getFirestore(fbApp);
+  const auth = getAuth(fbApp);
+
+  onAuthStateChanged(auth, (user)=>{
+    if(user){
+      // เมื่อ sign-in แบบไม่ระบุตัวตนสำเร็จ ค่อย resolve ให้สคริปต์หลักเริ่มอ่าน/เขียนข้อมูลได้
+      window.__fbResolveReady({ db, doc, getDoc, setDoc, uid: user.uid });
+    }
+  });
+  signInAnonymously(auth).catch((err)=>console.error("Firebase auth error:", err));
+</script>
+
+<script>
+/* ---------------- constants ---------------- */
+const CATEGORIES = [
+  { name:"การเรียนการสอน", color:"#142B45" },
+  { name:"สถานที่ & สิ่งอำนวยความสะดวก", color:"#4FA9DC" },
+  { name:"กิจกรรม & ชมรม", color:"#E8792F" },
+  { name:"โรงอาหาร", color:"#F4B740" },
+  { name:"กฎระเบียบ", color:"#7A8899" },
+  { name:"อื่น ๆ", color:"#9C7FB0" },
+];
+const DEFAULT_PIN = "2569";
+
+const ICONS = {
+  logo:`<svg viewBox="0 0 36 36" fill="none">
+    <path d="M6 8a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4v9a4 4 0 0 1-4 4H15l-6.5 5.6a1 1 0 0 1-1.65-.76V8Z" fill="#fff"/>
+    <path d="M11 13.4l3 3 6.2-6.8" stroke="#E8792F" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="29" cy="8" r="5.2" fill="#F4B740"/>
+    <path d="M29 5v1.6M29 9.4V11M26.4 8H28M30 8h1.6" stroke="#142B45" stroke-width="1.3" stroke-linecap="round"/>
+  </svg>`,
+  feed:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h11M4 19h16"/></svg>`,
+  wish:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.3 1 2.5h6c0-1.2.4-1.9 1-2.5A6 6 0 0 0 12 3Z"/></svg>`,
+  vote:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 12 2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>`,
+  council:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-3Z"/></svg>`,
+  heart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6c0 5-8.8 10.2-8.8 10.2S3.2 13.6 3.2 8.6a4.6 4.6 0 0 1 8.8-1.8 4.6 4.6 0 0 1 8.8 1.8Z"/></svg>`,
+  heartFill:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 8.6c0 5-8.8 10.2-8.8 10.2S3.2 13.6 3.2 8.6a4.6 4.6 0 0 1 8.8-1.8 4.6 4.6 0 0 1 8.8 1.8Z"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg>`,
+  send:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 11 18-8-8 18-2.5-7L3 11Z"/></svg>`,
+  lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`,
+  unlock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 7-2.6"/></svg>`,
+  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`,
+  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5 9-9"/></svg>`,
+  star:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 3 2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6L12 3Z"/></svg>`,
+  starFill:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6L12 3Z"/></svg>`,
+  sparkle:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>`,
+  clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+  chart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>`,
+};
+
+/* ---------------- state ---------------- */
+let state = {
+  posts: [], wishes: [], polls: [],
+  settings: { wishOpen:false, wishDeadline:null, councilPin: DEFAULT_PIN, lastResetMonth:null },
+  mine: { likedPosts:[], votedPolls:[], ratedPolls:[] },
+  tab: "feed", isCouncil:false, councilView:"dashboard",
+  draft: { postText:"", postCat: CATEGORIES[0].name, postName:"", wishText:"", pinInput:"", pinError:"",
+           pollTitle:"", pollOpts:["",""],
+           feedFilterCat:"all", feedSearchText:"" }
+};
+
+/* ---------------- storage helpers (Firebase Firestore) ---------------- */
+// shared=true  -> เก็บที่ collection "shared" ทุกคนอ่าน/เขียนร่วมกัน (posts, wishes, polls, settings)
+// shared=false -> เก็บแยกตามเครื่อง/ผู้ใช้ที่ collection "users/{uid}/private" (เช่น ไลค์ของฉัน)
+async function loadJSON(key, shared, fallback){
+  try{
+    const fb = await window.__fbReady;
+    const ref = shared ? fb.doc(fb.db,"shared",key) : fb.doc(fb.db,"users",fb.uid,"private",key);
+    const snap = await fb.getDoc(ref);
+    return snap.exists() ? snap.data().value : fallback;
+  }catch(e){ console.error("loadJSON failed", key, e); return fallback; }
+}
+async function saveJSON(key, value, shared){
+  try{
+    const fb = await window.__fbReady;
+    const ref = shared ? fb.doc(fb.db,"shared",key) : fb.doc(fb.db,"users",fb.uid,"private",key);
+    await fb.setDoc(ref, { value, updatedAt: Date.now() });
+  }catch(e){ console.error("saveJSON failed", key, e); }
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function timeAgo(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return "เมื่อสักครู่";
+  const m=Math.floor(s/60); if(m<60) return m+" นาทีที่แล้ว";
+  const h=Math.floor(m/60); if(h<24) return h+" ชั่วโมงที่แล้ว";
+  return Math.floor(h/24)+" วันที่แล้ว";
+}
+function catColor(name){ const c=CATEGORIES.find(c=>c.name===name); return c?c.color:"#999"; }
+const TAB_ACCENT = { feed:"#E8792F", wish:"#F4B740", vote:"#4FA9DC", council:"#9C7FB0" };
+function accent(){ return TAB_ACCENT[state.tab] || "#E8792F"; }
+function cardTitle(icon,label){ return `<div class="card-title"><span class="icon-chip">${ICONS[icon]}</span>${esc(label)}</div>`; }
+function isWishOpenNow(){
+  return state.settings.wishOpen && (!state.settings.wishDeadline || new Date() <= new Date(state.settings.wishDeadline));
+}
+function monthKey(d){ d=d||new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
+function monthLabel(key){
+  const [y,m] = key.split("-").map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString("th-TH",{month:"long",year:"numeric"});
+}
+// รีเซ็ตความคิดเห็น (feed) ทุกครั้งที่ขึ้นเดือนใหม่ เพื่อรีเซ็ตยอดนิยมประจำเดือนและลดภาระข้อมูลสะสม
+async function checkMonthlyReset(){
+  const nowKey = monthKey();
+  if(state.settings.lastResetMonth === nowKey) return;
+  state.posts = [];
+  state.mine.likedPosts = [];
+  const nextSettings = {...state.settings, lastResetMonth: nowKey};
+  await saveJSON("posts-data", {posts:[]}, true);
+  await saveJSON("settings-data", nextSettings, true);
+  await saveJSON("my-interactions", state.mine, false);
+  state.settings = nextSettings;
+}
+
+async function persist(key, field, value, shared, toastMsg){
+  state[field] = value;
+  await saveJSON(key, field==="settings" ? value : {[field]: value}, shared);
+  render();
+  if(toastMsg) showToast(toastMsg);
+}
+
+/* ---------------- toast ---------------- */
+let toastTimer = null;
+function showToast(msg){
+  let t = document.getElementById("toast");
+  if(!t){
+    t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    document.body.appendChild(t);
+  }
+  t.innerHTML = `<span class="toast-icon">${ICONS.check}</span><span>${esc(msg)}</span>`;
+  // force reflow so the show class re-triggers the transition every time
+  t.classList.remove("show");
+  void t.offsetWidth;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ t.classList.remove("show"); }, 2400);
+}
+
+/* ---------------- actions ---------------- */
+async function addPost(){
+  const text = state.draft.postText.trim();
+  if(!text) return;
+  const name = state.draft.postName.trim();
+  const post = { id:uid(), text, name, category:state.draft.postCat, likes:0, ts:Date.now() };
+  state.draft.postText = ""; state.draft.postName = "";
+  await persist("posts-data","posts",[post, ...state.posts], true, "ส่งความเห็นสำเร็จ");
+  state.mine.myPosts.push(post.id); await saveJSON("my-interactions",state.mine,false);
+}
+async function likePost(id){
+  if(state.mine.likedPosts.includes(id)) return;
+  const next = state.posts.map(p=>p.id===id?{...p,likes:p.likes+1}:p);
+  state.posts = next; await saveJSON("posts-data",{posts:next},true);
+  state.mine.likedPosts.push(id); await saveJSON("my-interactions",state.mine,false);
+  render();
+}
+async function deletePost(id){
+  await persist("posts-data","posts", state.posts.filter(p=>p.id!==id), true, "ลบความเห็นสำเร็จ");
+}
+async function addWish(){
+  const text = state.draft.wishText.trim();
+  if(!text) return;
+  state.draft.wishText = "";
+  await persist("wishes-data","wishes",[{id:uid(),text,ts:Date.now()}, ...state.wishes], true, "ส่งไอเดียสำเร็จ");
+}
+async function deleteWish(id){
+  await persist("wishes-data","wishes", state.wishes.filter(w=>w.id!==id), true, "ลบไอเดียสำเร็จ");
+}
+async function toggleWishOpen(){
+  const next = {...state.settings, wishOpen: !state.settings.wishOpen};
+  await persist("settings-data","settings", next, true, next.wishOpen ? "เปิดรับไอเดียแล้ว" : "ปิดรับไอเดียแล้ว");
+}
+async function updateDeadline(val){
+  const next = {...state.settings, wishDeadline: val || null};
+  await persist("settings-data","settings", next, true);
+}
+async function addPoll(){
+  const title = state.draft.pollTitle.trim();
+  const opts = state.draft.pollOpts.map(o=>o.trim()).filter(Boolean);
+  if(!title || opts.length<2) return;
+  const poll = { id:uid(), title, options:opts.map(t=>({id:uid(),text:t,votes:0})), status:"active", ts:Date.now(), feedback:[] };
+  state.draft.pollTitle=""; state.draft.pollOpts=["",""];
+  await persist("polls-data","polls",[poll, ...state.polls], true, "เปิดโหวตสำเร็จ");
+}
+async function vote(pollId, optId){
+  if(state.mine.votedPolls.includes(pollId)) return;
+  const next = state.polls.map(p=>p.id===pollId?{...p,options:p.options.map(o=>o.id===optId?{...o,votes:o.votes+1}:o)}:p);
+  state.polls=next; await saveJSON("polls-data",{polls:next},true);
+  state.mine.votedPolls.push(pollId); await saveJSON("my-interactions",state.mine,false);
+  render();
+  showToast("โหวตสำเร็จ");
+}
+async function endPoll(id){
+  await persist("polls-data","polls", state.polls.map(p=>p.id===id?{...p,status:"ended"}:p), true, "จบกิจกรรมสำเร็จ");
+}
+async function deletePoll(id){
+  await persist("polls-data","polls", state.polls.filter(p=>p.id!==id), true, "ลบกิจกรรมโหวตสำเร็จ");
+}
+async function submitFeedback(pollId, rating, comment){
+  if(state.mine.ratedPolls.includes(pollId) || rating<1) return;
+  const next = state.polls.map(p=>p.id===pollId?{...p,feedback:[...p.feedback,{rating,comment:comment.trim(),ts:Date.now()}]}:p);
+  state.polls=next; await saveJSON("polls-data",{polls:next},true);
+  state.mine.ratedPolls.push(pollId); await saveJSON("my-interactions",state.mine,false);
+  render();
+  showToast("ส่งคะแนนสำเร็จ");
+}
+function tryUnlock(){
+  if(state.draft.pinInput === state.settings.councilPin){
+    state.isCouncil=true; state.draft.pinError=""; state.draft.pinInput="";
+    render();
+    showToast("เข้าสู่ระบบสำเร็จ");
+  } else { state.draft.pinError = "รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง"; render(); }
+}
+function setTab(t){ state.tab=t; render(); }
+function bind(id, evt, handler){ const el=document.getElementById(id); if(el) el.addEventListener(evt, handler); }
+
+/* ---------------- render pieces ---------------- */
+function heroNet(){
+  let els="";
+  const pts=[[20,30],[90,20],[160,60],[230,15],[40,90],[130,110],[210,95],[70,140],[190,150]];
+  for(let i=0;i<pts.length-1;i++){ els += `<line x1="${pts[i][0]}" y1="${pts[i][1]}" x2="${pts[i+1][0]}" y2="${pts[i+1][1]}" stroke="#fff" stroke-width="1"/>`; }
+  pts.forEach(p=>{ els += `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#fff"/>`; });
+  return `<svg class="hero-net" viewBox="0 0 260 170" preserveAspectRatio="none">${els}</svg>`;
+}
+
+function renderHero(){
+  const total = state.posts.length, wishes = state.wishes.length, activePolls = state.polls.filter(p=>p.status==="active").length;
+  return `
+  <div class="hero">
+    ${heroNet()}
+    <div class="hero-top">
+      <div class="badge">${ICONS.logo}</div>
+      <div>
+        <div class="hero-title"><span class="hl">BB</span> RIGHT</div>
+        <div class="hero-sub">พื้นที่บอกเล่า ฟังเสียงจริง เปลี่ยนแปลงได้จริง</div>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><b>${total}</b><span>ความเห็นทั้งหมด</span></div>
+      <div class="hero-stat"><b>${wishes}</b><span>ไอเดียใน Gather Wish</span></div>
+      <div class="hero-stat"><b>${activePolls}</b><span>โหวตที่เปิดอยู่</span></div>
+    </div>
+  </div>`;
+}
+
+function trendBars(posts){
+  const counts = CATEGORIES.map(c=>({...c, count: posts.filter(p=>p.category===c.name).length}));
+  const max = Math.max(1, ...counts.map(c=>c.count));
+  return counts.map(c=>`
+    <div class="bar-row">
+      <div class="bar-label">${esc(c.name)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(c.count/max)*100}%;background:${c.color}"></div></div>
+      <div class="bar-val">${c.count}</div>
+    </div>`).join("");
+}
+
+function renderFeedPostsList(posts){
+  const filterCat = state.draft.feedFilterCat;
+  const q = state.draft.feedSearchText.trim().toLowerCase();
+  const filtered = posts.filter(p =>
+    (filterCat==="all" || (filterCat==="mine" ? state.mine.myPosts.includes(p.id) : p.category===filterCat)) &&
+    (!q || p.text.toLowerCase().includes(q))
+  );
+  if(posts.length===0) return `<div class="empty">ยังไม่มีใครพูดอะไร เป็นคนแรกที่เริ่มบทสนทนาสิ</div>`;
+  if(filtered.length===0) return `<div class="empty">${filterCat==="mine" ? "คุณยังไม่เคยส่งความเห็น" : "ไม่พบความคิดเห็นที่ตรงกับหมวดหมู่หรือคำค้นหา"}</div>`;
+  return filtered.map(p=>`
+      <div class="post">
+        <div class="row">
+          <span class="tag" style="background:${catColor(p.category)}1a;color:${catColor(p.category)}"><span class="dot" style="background:${catColor(p.category)}"></span>${esc(p.category)}</span>
+          ${state.isCouncil ? `<button class="btn-ghost" onclick="deletePost('${p.id}')">${ICONS.trash}</button>` : ""}
+        </div>
+        ${p.name ? `<div style="font-size:12.5px;font-weight:600;color:var(--navy);margin-top:6px;">${esc(p.name)}</div>` : ""}
+        <div class="post-text">${esc(p.text)}</div>
+        <div class="post-foot">
+          <span class="time">${timeAgo(p.ts)}</span>
+          <button class="like ${state.mine.likedPosts.includes(p.id)?"liked":""}" ${state.mine.likedPosts.includes(p.id)?"disabled":""} onclick="likePost('${p.id}')">
+            ${state.mine.likedPosts.includes(p.id)?ICONS.heartFill:ICONS.heart} ${p.likes}
+          </button>
+        </div>
+      </div>`).join("");
+}
+function updateFeedList(){
+  const el = document.getElementById("feedPostsList");
+  if(el) el.innerHTML = renderFeedPostsList(state.posts);
+}
+
+function renderFeed(){
+  const posts = state.posts;
+  return `
+  <div class="stack">
+    <div class="card">
+      ${cardTitle("feed","เสียงของท่านสำคัญ เราพร้อมรับฟังเสมอ")}
+      <input id="postName" class="field" style="margin-bottom:8px;" placeholder="ชื่อ (ถ้าไม่อยากระบุ ปล่อยว่างได้)" value="${esc(state.draft.postName)}" />
+      <textarea id="postText" class="field" rows="3" placeholder="อยากบอกอะไรโรงเรียนบ้าง พิมพ์ได้เลย ไม่มีใครรู้ว่าเป็นใคร...">${esc(state.draft.postText)}</textarea>
+      <div class="row" style="margin-top:10px;">
+        <select id="postCat" class="field">
+          ${CATEGORIES.map(c=>`<option value="${esc(c.name)}" ${state.draft.postCat===c.name?"selected":""}>${esc(c.name)}</option>`).join("")}
+        </select>
+        <button class="btn btn-orange" id="postBtn">${ICONS.send} ส่งความเห็น</button>
+      </div>
+    </div>
+
+    <div class="card">
+      ${cardTitle("chart","ภาพรวมความคิดเห็นตอนนี้")}
+      <div style="font-size:11.5px;color:var(--muted);margin:-7px 0 10px;">ประจำเดือน ${monthLabel(state.settings.lastResetMonth || monthKey())} · ระบบรีเซ็ตความคิดเห็นและยอดนิยมทุกต้นเดือน</div>
+      <div class="stack" style="gap:7px;">${trendBars(posts)}</div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="gap:8px;flex-wrap:wrap;">
+        <select id="feedFilterCat" class="field" style="flex:1;min-width:130px;">
+          <option value="all" ${state.draft.feedFilterCat==="all"?"selected":""}>ทุกหมวดหมู่</option>
+          <option value="mine" ${state.draft.feedFilterCat==="mine"?"selected":""}>ความเห็นที่ฉันส่ง</option>
+          ${CATEGORIES.map(c=>`<option value="${esc(c.name)}" ${state.draft.feedFilterCat===c.name?"selected":""}>${esc(c.name)}</option>`).join("")}
+        </select>
+        <input id="feedSearchInput" class="field" style="flex:2;min-width:150px;" placeholder="ค้นหาความคิดเห็นที่น่าสนใจ..." value="${esc(state.draft.feedSearchText)}" />
+      </div>
+    </div>
+
+    <div id="feedPostsList" class="stack">${renderFeedPostsList(posts)}</div>
+  </div>`;
+}
+
+function renderWish(){
+  const open = isWishOpenNow();
+  return `
+  <div class="stack">
+    <div class="card" style="background:linear-gradient(160deg,var(--navy),var(--navy-2));border:none;">
+      <div class="card-title" style="color:#fff;"><span class="icon-chip" style="background:rgba(255,255,255,.16);">${ICONS.wish}</span>Gather Wish — คำขอของท่านคืออะไร</div>
+      <p style="color:#C7D2E0;font-size:13px;margin:0;">ช่วงนี้สภานักเรียนเปิดรับไอเดียนโยบายที่อยากให้โรงเรียนปรับปรุง เขียนมาได้เต็มที่</p>
+      ${state.settings.wishDeadline ? `<div style="display:flex;align-items:center;gap:6px;margin-top:10px;color:#C7D2E0;font-size:12px;">${ICONS.clock} ปิดรับภายใน ${new Date(state.settings.wishDeadline).toLocaleString("th-TH",{dateStyle:"medium",timeStyle:"short"})}</div>` : ""}
+    </div>
+
+    ${open ? `
+    <div class="card">
+      <textarea id="wishText" class="field" rows="3" placeholder="พิมพ์ไอเดียของคุณ เช่น อยากให้เพิ่มพัดลมในห้องเรียน หรืออยากให้ปรับตารางสอบ...">${esc(state.draft.wishText)}</textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+        <button class="btn btn-orange" id="wishBtn">${ICONS.send} ส่งไอเดีย</button>
+      </div>
+    </div>` : `<div class="card empty">ตอนนี้ยังไม่เปิดรับไอเดียใหม่ รอสภานักเรียนเปิดรอบถัดไป</div>`}
+
+    <div class="empty" style="font-size:12.5px;">ไอเดียที่ส่งเข้ามาจะถูกส่งตรงถึงสภานักเรียนเท่านั้น ผู้ใช้คนอื่นจะไม่เห็นข้อความของคุณ</div>
+  </div>`;
+}
+
+function pollCard(poll){
+  const total = poll.options.reduce((a,o)=>a+o.votes,0) || 1;
+  const voted = state.mine.votedPolls.includes(poll.id);
+  const rated = state.mine.ratedPolls.includes(poll.id);
+  const showResults = voted || poll.status==="ended";
+  const avg = poll.feedback.length ? (poll.feedback.reduce((a,f)=>a+f.rating,0)/poll.feedback.length).toFixed(1) : null;
+
+  const optionsHtml = poll.options.map(o=>{
+    const pct = Math.round((o.votes/total)*100);
+    if(showResults){
+      return `<div class="result-row"><div class="result-fill" style="width:${pct}%"></div><div class="result-inner"><span>${esc(o.text)}</span><b>${pct}%</b></div></div>`;
+    }
+    return `<button class="option-btn" onclick="vote('${poll.id}','${o.id}')">${esc(o.text)}</button>`;
+  }).join("");
+
+  let feedbackHtml = "";
+  if(poll.status==="ended"){
+    feedbackHtml = rated
+      ? `<div style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:10px;">${ICONS.check} ขอบคุณสำหรับความคิดเห็น</div>`
+      : `<div class="stack" style="gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px;">
+           <span style="font-size:13px;color:var(--navy);font-weight:600;">กิจกรรมนี้เป็นอย่างไรบ้าง</span>
+           <div class="stars" id="stars-${poll.id}">${[1,2,3,4,5].map(n=>`<button class="star-btn" data-poll="${poll.id}" data-val="${n}" onclick="setRating('${poll.id}',${n})">${ICONS.star}</button>`).join("")}</div>
+           <input class="field" id="comment-${poll.id}" placeholder="มีข้อเสนอแนะเพิ่มเติมไหม (ถ้ามี)" />
+           <button class="btn btn-orange" style="align-self:flex-start;" onclick="doSubmitFeedback('${poll.id}')">ส่งคะแนน</button>
+         </div>`;
+    if(avg) feedbackHtml += `<div style="font-size:12px;color:var(--muted);margin-top:8px;">คะแนนเฉลี่ย ${avg} / 5 จาก ${poll.feedback.length} คน</div>`;
+  }
+
+  return `
+  <div class="card">
+    <div class="row">
+      <span style="font-weight:600;color:var(--navy);font-size:15px;">${esc(poll.title)}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="tag" style="background:${poll.status==="active"?"#E5F5EA":"#F1F1F1"};color:${poll.status==="active"?"#2E8B4F":"var(--muted)"}">${poll.status==="active"?"กำลังโหวต":"จบกิจกรรมแล้ว"}</span>
+        ${state.isCouncil ? `<button class="btn-ghost" onclick="deletePoll('${poll.id}')">${ICONS.trash}</button>` : ""}
+      </div>
+    </div>
+    <div style="margin-top:12px;">${optionsHtml}</div>
+    ${showResults ? `<div style="font-size:11.5px;color:var(--muted);">รวม ${total===1 && poll.options.every(o=>o.votes===0)?0:total} โหวต</div>` : ""}
+    ${feedbackHtml}
+    ${state.isCouncil && poll.status==="active" ? `<button class="btn btn-outline" style="margin-top:12px;" onclick="endPoll('${poll.id}')">จบกิจกรรมนี้</button>` : ""}
+  </div>`;
+}
+
+let ratingDraft = {};
+function setRating(pollId, val){ ratingDraft[pollId]=val;
+  document.querySelectorAll(`#stars-${pollId} .star-btn`).forEach(btn=>{
+    btn.innerHTML = Number(btn.dataset.val) <= val ? ICONS.starFill : ICONS.star;
+    btn.style.color = Number(btn.dataset.val) <= val ? "var(--amber)" : "var(--muted)";
+  });
+}
+function doSubmitFeedback(pollId){
+  const comment = document.getElementById(`comment-${pollId}`)?.value || "";
+  submitFeedback(pollId, ratingDraft[pollId]||0, comment);
+}
+
+function renderVote(){
+  const active = state.polls.filter(p=>p.status==="active");
+  const ended = state.polls.filter(p=>p.status==="ended");
+  if(state.polls.length===0) return `<div class="empty">ยังไม่มีการโหวตในตอนนี้</div>`;
+  let html = "";
+  if(active.length){ html += `<div style="font-weight:600;color:var(--navy);font-size:14px;margin:2px 0 -2px;">กำลังเปิดโหวต</div>` + active.map(pollCard).join(""); }
+  if(ended.length){ html += `<div style="font-weight:600;color:var(--navy);font-size:14px;margin:6px 0 -2px;">กิจกรรมที่จบแล้ว</div>` + ended.map(pollCard).join(""); }
+  return `<div class="stack">${html}</div>`;
+}
+
+function renderCouncilLogin(){
+  return `
+  <div class="card login-card">
+    <div class="login-icon" style="color:var(--navy);">${ICONS.council}</div>
+    <h3 style="margin:10px 0 2px;color:var(--navy);">โหมดสภานักเรียน</h3>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">ใส่รหัสผ่านของสภานักเรียนเพื่อเข้าดูภาพรวมและจัดการระบบ</p>
+    <input id="pinInput" type="password" class="field" placeholder="กรอกรหัสผ่านสภานักเรียน" value="${esc(state.draft.pinInput)}" />
+    ${state.draft.pinError ? `<div class="err">${state.draft.pinError}</div>` : ""}
+    <div style="margin-top:14px;"><button class="btn btn-navy" id="unlockBtn">${ICONS.lock} เข้าสู่ระบบ</button></div>
+  </div>`;
+}
+
+function renderCouncilDashboard(){
+  const topPosts = [...state.posts].sort((a,b)=>b.likes-a.likes).slice(0,3);
+  const sortedCats = [...CATEGORIES].map(c=>({...c,count:state.posts.filter(p=>p.category===c.name).length})).sort((a,b)=>b.count-a.count);
+  const max = Math.max(1, ...sortedCats.map(c=>c.count));
+  return `
+  <div class="stack">
+    <div class="row">
+      <div class="card-title" style="margin:0;"><span class="icon-chip">${ICONS.council}</span>แดชบอร์ดสภานักเรียน</div>
+      <button class="btn-ghost" onclick="exitCouncil()">${ICONS.unlock}</button>
+    </div>
+
+    <div class="card">
+      ${cardTitle("sparkle","สรุป: นักเรียนต้องการอะไรมากที่สุด")}
+      <div style="font-size:11.5px;color:var(--muted);margin:-9px 0 10px;">ข้อมูลประจำเดือน ${monthLabel(state.settings.lastResetMonth || monthKey())} · ระบบรีเซ็ตอัตโนมัติทุกต้นเดือน</div>
+      <div class="stack" style="gap:6px;margin-bottom:12px;">
+        ${sortedCats.map(c=>`
+          <div class="bar-row">
+            <div class="bar-label">${esc(c.name)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(c.count/max)*100}%;background:${c.color}"></div></div>
+            <div class="bar-val">${c.count}</div>
+          </div>`).join("")}
+      </div>
+      <div style="font-size:13px;color:var(--navy);font-weight:600;margin-bottom:6px;">ความเห็นที่ได้รับความสนใจสูงสุด</div>
+      ${topPosts.length===0 ? `<div style="font-size:13px;color:var(--muted);">ยังไม่มีข้อมูล</div>` :
+        topPosts.map(p=>`<div style="font-size:13px;padding:6px 0;border-top:1px solid var(--line);"><span style="color:var(--orange);font-weight:600;">♥ ${p.likes}</span> — ${esc(p.text.slice(0,70))}${p.text.length>70?"…":""} <span style="color:var(--muted);">(${p.name?esc(p.name):"ไม่ระบุชื่อ"})</span></div>`).join("")}
+    </div>
+
+    <div class="card">
+      ${cardTitle("wish","จัดการ Gather Wish")}
+      <div class="row" style="margin-bottom:10px;">
+        <span style="font-size:13px;">สถานะตอนนี้: <b>${isWishOpenNow()?"เปิดรับไอเดีย":"ปิดรับไอเดีย"}</b></span>
+        <button class="btn ${state.settings.wishOpen?"btn-outline":"btn-orange"}" onclick="toggleWishOpen()">${state.settings.wishOpen?"ปิดรับ":"เปิดรับ"}</button>
+      </div>
+      <label style="font-size:12px;color:var(--muted);">กำหนดวัน-เวลาปิดรับ (ไม่บังคับ)</label>
+      <input type="datetime-local" class="field" id="deadlineInput" value="${state.settings.wishDeadline ? state.settings.wishDeadline.slice(0,16) : ""}" />
+      <div class="row" style="margin-top:10px;">
+        <span style="font-size:12px;color:var(--muted);">ตอนนี้มีไอเดียส่งเข้ามาแล้ว ${state.wishes.length} รายการ</span>
+        <button class="btn btn-outline" onclick="openWishArchive()">${ICONS.wish} ดูคลังคำขอทั้งหมด</button>
+      </div>
+    </div>
+
+    <div class="card">
+      ${cardTitle("vote","เปิดโหวตกิจกรรมใหม่")}
+      <input id="pollTitle" class="field" placeholder="ตั้งหัวข้อโหวต เช่น กิจกรรมวันกีฬาสีควรเป็นแบบไหน" value="${esc(state.draft.pollTitle)}" />
+      <div class="stack" style="gap:6px;margin-top:8px;" id="pollOpts">
+        ${state.draft.pollOpts.map((o,i)=>`
+          <div style="display:flex;gap:6px;">
+            <input class="field poll-opt" data-idx="${i}" placeholder="ตัวเลือกที่ ${i+1}" value="${esc(o)}" style="flex:1;" />
+            ${state.draft.pollOpts.length>2 ? `<button class="btn-ghost" onclick="removePollOpt(${i})">${ICONS.x}</button>` : ""}
+          </div>`).join("")}
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn btn-outline" onclick="addPollOpt()">${ICONS.plus} เพิ่มตัวเลือก</button>
+        <button class="btn btn-orange" id="createPollBtn">${ICONS.send} เปิดโหวต</button>
+      </div>
+    </div>
+  </div>`;
+}
+function exitCouncil(){ state.isCouncil=false; state.councilView="dashboard"; render(); }
+function openWishArchive(){ state.councilView="archive"; render(); }
+function closeWishArchive(){ state.councilView="dashboard"; render(); }
+
+function renderCouncilWishArchive(){
+  return `
+  <div class="stack">
+    <div class="row">
+      <div class="card-title" style="margin:0;"><span class="icon-chip">${ICONS.wish}</span>คลังคำขอ Gather Wish</div>
+      <button class="btn-ghost" onclick="closeWishArchive()">${ICONS.unlock}</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin:-6px 0 0;">รวมคำขอทั้งหมด ${state.wishes.length} รายการจากทุกคน</div>
+    ${state.wishes.length===0 ? `<div class="empty">ยังไม่มีไอเดียถูกส่งเข้ามา</div>` : state.wishes.map(w=>`
+      <div class="post">
+        <div class="row" style="align-items:flex-start;">
+          <div class="post-text" style="margin:0;flex:1;">${esc(w.text)}</div>
+          <button class="btn-ghost" onclick="deleteWish('${w.id}')">${ICONS.trash}</button>
+        </div>
+        <div class="time" style="margin-top:6px;">${timeAgo(w.ts)}</div>
+      </div>`).join("")}
+  </div>`;
+}
+
+function addPollOpt(){ state.draft.pollOpts.push(""); render(); }
+function removePollOpt(i){ state.draft.pollOpts.splice(i,1); render(); }
+
+function renderBottomNav(){
+  const items = [["feed","feed","ระบายความเห็น"],["wish","wish","Gather Wish"],["vote","vote","โหวต"],["council","council","สภานักเรียน"]];
+  return `<div class="bottomnav">
+    ${items.map(([key,icon,label])=>`
+      <button class="navbtn ${state.tab===key?"active":""}" onclick="setTab('${key}')">${ICONS[icon]}<span>${label}</span></button>`).join("")}
+  </div>`;
+}
+
+/* ---------------- main render ---------------- */
+function render(){
+  document.documentElement.style.setProperty("--accent", accent());
+  const app = document.getElementById("app");
+  let body = "";
+  if(state.tab==="feed") body = renderFeed();
+  else if(state.tab==="wish") body = renderWish();
+  else if(state.tab==="vote") body = renderVote();
+  else if(state.tab==="council") body = state.isCouncil ? (state.councilView==="archive" ? renderCouncilWishArchive() : renderCouncilDashboard()) : renderCouncilLogin();
+
+  app.innerHTML = `
+    ${renderHero()}
+    <div class="content">${body}</div>
+    ${renderBottomNav()}
+  `;
+  attachHandlers();
+}
+
+function attachHandlers(){
+  bind("postText","input",e=>{ state.draft.postText = e.target.value; });
+  bind("postName","input",e=>{ state.draft.postName = e.target.value; });
+  bind("postCat","change",e=>{ state.draft.postCat = e.target.value; });
+  bind("postBtn","click", addPost);
+  bind("feedFilterCat","change",e=>{ state.draft.feedFilterCat = e.target.value; updateFeedList(); });
+  bind("feedSearchInput","input",e=>{ state.draft.feedSearchText = e.target.value; updateFeedList(); });
+
+  bind("wishText","input",e=>{ state.draft.wishText = e.target.value; });
+  bind("wishBtn","click", addWish);
+
+  bind("pinInput","input",e=>{ state.draft.pinInput = e.target.value; });
+  bind("pinInput","keydown",e=>{ if(e.key==="Enter") tryUnlock(); });
+  bind("unlockBtn","click", tryUnlock);
+
+  bind("deadlineInput","change",e=>{ updateDeadline(e.target.value ? new Date(e.target.value).toISOString() : null); });
+  bind("pollTitle","input",e=>{ state.draft.pollTitle = e.target.value; });
+  document.querySelectorAll(".poll-opt").forEach(inp=>{
+    inp.addEventListener("input", e=>{ state.draft.pollOpts[Number(e.target.dataset.idx)] = e.target.value; });
+  });
+  bind("createPollBtn","click", addPoll);
+}
+
+/* ---------------- init ---------------- */
+async function init(){
+  const [p,w,pl,s,m] = await Promise.all([
+    loadJSON("posts-data",true,{posts:[]}),
+    loadJSON("wishes-data",true,{wishes:[]}),
+    loadJSON("polls-data",true,{polls:[]}),
+    loadJSON("settings-data",true,{wishOpen:false,wishDeadline:null,councilPin:DEFAULT_PIN,lastResetMonth:null}),
+    loadJSON("my-interactions",false,{likedPosts:[],votedPolls:[],ratedPolls:[],myPosts:[]}),
+  ]);
+  state.posts = p.posts||[]; state.wishes = w.wishes||[]; state.polls = pl.polls||[];
+  state.settings = s; state.mine = m; if(!state.mine.myPosts) state.mine.myPosts = [];
+  if(!state.settings.lastResetMonth) state.settings.lastResetMonth = monthKey();
+  await checkMonthlyReset();
+  render();
+}
+init();
+</script>
+</body>
+</html>
