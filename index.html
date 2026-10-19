@@ -702,6 +702,36 @@ async function deleteComment(cid){
   if(!(await ask({title:"ลบคอมเมนต์นี้?",body:"การลบไม่สามารถย้อนกลับได้",ok:"ลบ",danger:true}))) return;
   try{ const b=writeBatch(db); b.delete(doc(db,"ideas",S.modal.id,"comments",cid)); b.update(doc(db,"ideas",S.modal.id),{comments:increment(-1)}); await b.commit(); }catch(e){ fail(e); }
 }
+/* ลบโพสต์ถาวร: ลบโหวตและคอมเมนต์ทั้งหมดด้วย คะแนนจึงหายไปทั้งหมด */
+async function purgeIdea(id){
+  for(const sub of ["votes","comments"]){
+    const snap=await getDocs(collection(db,"ideas",id,sub));
+    for(let k=0;k<snap.docs.length;k+=400){ const b=writeBatch(db); snap.docs.slice(k,k+400).forEach(d=>b.delete(d.ref)); await b.commit(); }
+  }
+  await deleteDoc(doc(db,"ideas",id));
+  delete S.codes[id]; LS.set("bb_codes",S.codes); delete S.me.upvoted[id];
+}
+async function confirmDelete(id){
+  const i=getIdea(id); if(!i) return;
+  const ok=await ask({title:"ลบโพสต์นี้ถาวร?",
+    body:`<p><b>${esc(i.title)}</b></p><p class="muted" style="margin-top:6px;">คะแนนโหวต ${i.votes||0} คะแนน และคอมเมนต์ ${i.comments||0} รายการจะหายไปทั้งหมด และกู้คืนไม่ได้</p>${quotaNote(i)}`,
+    ok:"ลบถาวร", danger:true});
+  if(!ok) return;
+  try{ await purgeIdea(id); closeModal(); toast("ลบโพสต์แล้ว"); refresh(); }catch(e){ fail(e); }
+}
+const quotaNote = i => (!S.council && isMine(i.id)) ? '<p class="hint">หมายเหตุ: โควต้า 1 ข้อเสนอของรอบนี้จะไม่ถูกคืน</p>' : '';
+async function submitDelete(form){
+  const id=S.modal.id, i=getIdea(id), err=$("#dlErr"); err.textContent="";
+  if((await codeHash(id,$("#dlCode").value)) !== i.ch){ err.textContent="Secret Code ไม่ถูกต้อง"; return; }
+  await confirmDelete(id);
+}
+function openDelete(id){
+  const i=getIdea(id); S.modal={type:"delete",id,idea:i};
+  showModal(`<div class="sheet-head"><button class="icon-btn" data-action="detail" data-id="${id}" aria-label="กลับ">${ic("back")}</button><h2 class="disp">🗑️ ลบโพสต์</h2><span style="width:40px"></span></div>
+  <p class="muted">ใส่ Secret Code ของโพสต์นี้เพื่อยืนยันว่าคุณเป็นเจ้าของ การลบจะทำให้ <b>คะแนนโหวตและคอมเมนต์หายทั้งหมด</b></p>
+  <form data-form="del"><label class="lbl" for="dlCode">Secret Code</label><input id="dlCode" class="field" placeholder="BB-XXXX-XXXX-XXXX" value="${esc(S.codes[id]||"")}" autocomplete="off" autocapitalize="characters">
+  <div class="err" id="dlErr" role="alert"></div><div style="margin-top:14px;text-align:right;"><button class="btn danger" type="submit">${ic("trash")} ลบโพสต์</button></div></form>`);
+}
 async function claimReward(form){
   const id=S.modal.id, i=getIdea(id), err=$("#clErr"); err.textContent="";
   if((await codeHash(id,$("#clCode").value)) !== i.ch){ err.textContent="Claim Key ไม่ถูกต้อง"; return; }
@@ -1027,11 +1057,11 @@ function cEvents(){
 }
 function cPosts(){
   const list=[...S.ideas].sort((a,b)=>b.ts-a.ts);
-  return `<div class="card"><h3>โพสต์ในรอบนี้ (${list.length})</h3><p class="hint">ซ่อนโพสต์ที่ไม่เหมาะสมได้ (กู้คืนได้) · ผู้ชนะที่รับรางวัลแล้วให้กด “มอบรางวัลแล้ว”</p>
+  return `<div class="card"><h3>โพสต์ในรอบนี้ (${list.length})</h3><p class="hint">ซ่อนโพสต์ได้ (กู้คืนได้) หรือลบถาวร (คะแนนและคอมเมนต์หายทั้งหมด) · ผู้ชนะที่รับรางวัลแล้วให้กด “มอบรางวัลแล้ว”</p>
   ${list.length?list.map(i=>`<div class="item ${i.hidden?"hidden-post":""}"><div style="min-width:0;"><div class="tt" data-action="open" data-id="${i.id}" style="cursor:pointer;">${esc(i.title)}</div>
     <small class="muted">▲ ${i.votes||0} · ${timeAgo(i.ts)}${i.claimedAt?" · ขอรับรางวัลแล้ว":""}${i.rewarded?" · มอบรางวัลแล้ว":""}</small></div>
     <div class="row" style="flex-wrap:nowrap;">${i.claimedAt&&!i.rewarded?`<button class="btn soft sm" data-action="rewarded" data-id="${i.id}">มอบรางวัลแล้ว</button>`:""}
-    <button class="btn line sm" data-action="hide" data-id="${i.id}" data-v="${i.hidden?0:1}">${i.hidden?"แสดง":"ซ่อน"}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีโพสต์</p>'}</div>`;
+    <button class="btn line sm" data-action="hide" data-id="${i.id}" data-v="${i.hidden?0:1}">${i.hidden?"แสดง":"ซ่อน"}</button><button class="icon-btn" data-action="delidea" data-id="${i.id}" aria-label="ลบถาวร">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีโพสต์</p>'}</div>`;
 }
 function cSettings(){
   const def=!S.settings.councilPinHash;
@@ -1098,6 +1128,7 @@ function detailHTML(i){
     <button class="up ${on?"on":""}" id="dUp" data-action="upvote" data-id="${i.id}">${ic("up")}<span id="dVotes">${i.votes||0}</span></button>
     ${(i.history||[]).length?`<button class="btn line sm" data-action="history" data-id="${i.id}">📜 ดูประวัติการแก้ไข</button>`:""}
     ${left>0?`<button class="btn line sm" data-action="edit" data-id="${i.id}">${ic("edit")} แก้ไข · เหลือ ${Math.ceil(left/60000)} นาที</button>`:""}
+    <button class="btn danger sm" data-action="delidea" data-id="${i.id}" style="margin-left:auto;">${ic("trash")} ลบโพสต์</button>
   </div>
   <h3 style="margin:22px 0 4px;font-size:17px;">💬 ความคิดเห็น <span class="muted" id="dCmCount">(${i.comments||0})</span></h3>
   <div id="dComments"></div>
@@ -1189,6 +1220,7 @@ const ACT = {
   share:el=>shareIdea(el.dataset.id),
   history:el=>openHistory(el.dataset.id), edit:el=>openEdit(el.dataset.id),
   claim:el=>openClaim(el.dataset.id, +el.dataset.rank),
+  delidea:el=>{ S.council ? confirmDelete(el.dataset.id) : openDelete(el.dataset.id); },
   copycode:async el=>toast((await copyText(el.dataset.code))?"คัดลอกรหัสแล้ว":"คัดลอกไม่สำเร็จ"),
   delcm:el=>deleteComment(el.dataset.id),
   vote:el=>votePoll(el.dataset.pid, el.dataset.oid),
@@ -1217,7 +1249,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("submit",e=>{
   const f=e.target.closest("[data-form]"); if(!f) return; e.preventDefault();
-  ({ compose:submitIdea, edit:submitEdit, comment:submitComment, claim:claimReward, pin:councilLogin })[f.dataset.form]?.(f);
+  ({ compose:submitIdea, edit:submitEdit, del:submitDelete, comment:submitComment, claim:claimReward, pin:councilLogin })[f.dataset.form]?.(f);
 });
 document.addEventListener("input",e=>{
   const t=e.target;
