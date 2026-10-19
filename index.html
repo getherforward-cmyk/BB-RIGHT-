@@ -322,7 +322,7 @@ mark.del{background:var(--mark-del);color:inherit;border-radius:4px;padding:0 1p
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, where, orderBy,
          runTransaction, writeBatch, increment, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, linkWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 /* =====================================================================
    CONFIG — ปรับค่าได้ที่นี่
@@ -340,7 +340,6 @@ const CFG = {
   ROUND_EPOCH: Date.UTC(2026, 9, 18, 17, 0, 0),    // เริ่มรอบแรก 19 ต.ค. 2026 เวลา 00:00 (ไทย)
   EDIT_MIN: 30,                                    // แก้ไขได้ภายใน 30 นาที
   POINTS: [30, 20, 10],                            // แต้มบุญอันดับ 1-3
-  DEFAULT_PIN: "2569",                             // รหัสสภาเริ่มต้น (เปลี่ยนได้ในหน้าสภา > ตั้งค่า)
   DEFAULT_REWARDS: "อันดับ 1 ได้ 30 แต้มบุญ · อันดับ 2 ได้ 20 แต้มบุญ · อันดับ 3 ได้ 10 แต้มบุญ พร้อมเกียรติบัตรจากสภานักเรียน",
 };
 const CATS = [
@@ -501,12 +500,11 @@ const ic = (n,cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none"
 const S = {
   uid:null, tab:"feed", sort:"top", cat:"all", q:"", mine:false,
   ideas:[], prev:null, polls:[], events:[], settings:{}, me:{ upvoted:{}, votedPolls:{}, rated:{}, quota:{} },
-  loaded:{}, online:true, modal:null, comments:[], council:false, cview:"overview", pollView:"donut", rankView:"cur",
+  loaded:{}, online:true, modal:null, comments:[], council:false, email:null, members:[], cview:"overview", pollView:"donut", rankView:"cur",
   codes: LS.get("bb_codes",{}),
-  draft:{ pollTitle:"", pollDesc:"", pollOpts:["",""], evName:"", evDate:"", evDesc:"", stars:{}, tags:{}, pin:"", pinErr:"", rewards:null, newPin:"", compose:{title:"",text:"",cat:"study"} },
+  draft:{ pollTitle:"", pollDesc:"", pollOpts:["",""], evName:"", evDate:"", evDesc:"", stars:{}, tags:{}, rewards:null, memberEmail:"", compose:{title:"",text:"",cat:"study"} },
   dirty:false, lastComment:0,
 };
-try{ S.council = sessionStorage.getItem("bb_council")==="1"; }catch{}
 let db, auth, unsubs = [], commentsUnsub = null, activeRound = roundInfo().id;
 
 /* =====================================================================
@@ -597,10 +595,62 @@ function subscribeAll(){
   unsubs.push({k:"settings", f:onSnapshot(doc(db,"settings","main"), snap=>{
     S.settings = snap.exists()?snap.data():{}; refresh();
   }, ()=>{})});
+}
+function subscribeMe(){
+  unsubs.filter(u=>u.k==="me").forEach(u=>u.f()); unsubs=unsubs.filter(u=>u.k!=="me");
+  S.me={ upvoted:{}, votedPolls:{}, rated:{}, quota:{} };
   unsubs.push({k:"me", f:onSnapshot(doc(db,"users",S.uid), snap=>{
     const d = snap.exists()?snap.data():{};
     S.me = { upvoted:d.upvoted||{}, votedPolls:d.votedPolls||{}, rated:d.rated||{}, quota:d.quota||{} }; S.loaded.me=true; refresh();
   }, ()=>{ S.loaded.me=true; })});
+}
+function subscribeMembers(){
+  unsubs.filter(u=>u.k==="members").forEach(u=>u.f()); unsubs=unsubs.filter(u=>u.k!=="members");
+  S.members=[]; if(!S.council) return;
+  unsubs.push({k:"members", f:onSnapshot(collection(db,"council"), snap=>{
+    S.members=snap.docs.map(d=>({email:d.id,...d.data()})).sort((a,b)=>(a.ts||0)-(b.ts||0)); refresh();
+  }, ()=>{})});
+}
+/* สถานะผู้ใช้: นักเรียน = Anonymous / สภา = Google + อยู่ในรายชื่อ council */
+let authFirst=null;
+async function applyUser(u){
+  if(!u){ try{ await signInAnonymously(auth); }catch(e){ console.error(e); } return; }
+  S.uid=u.uid; S.email=u.isAnonymous?null:(u.email||"").toLowerCase(); S.council=false;
+  if(S.email){ try{ S.council=(await getDoc(doc(db,"council",S.email))).exists(); }catch{ S.council=false; } }
+  subscribeMe(); subscribeMembers();
+  if(S.tab==="council") renderView();
+  if(authFirst){ authFirst(); authFirst=null; }
+}
+async function googleLogin(){
+  const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:"select_account"});
+  try{
+    const cu=auth.currentUser;
+    if(cu && cu.isAnonymous){
+      try{ await linkWithPopup(cu, provider); }
+      catch(e){ if(e.code==="auth/credential-already-in-use"||e.code==="auth/email-already-in-use") await signInWithPopup(auth,provider); else throw e; }
+    } else await signInWithPopup(auth,provider);
+    await auth.currentUser.getIdToken(true);
+    await applyUser(auth.currentUser);
+    toast(S.council?"เข้าสู่โหมดสภานักเรียนแล้ว":"ล็อกอินแล้ว แต่อีเมลนี้ยังไม่อยู่ในรายชื่อสภา", !S.council);
+  }catch(e){
+    const c=String(e.code||"");
+    if(c.includes("popup-closed")||c.includes("cancelled-popup")) return;
+    if(c.includes("unauthorized-domain")) toast("โดเมนนี้ยังไม่ได้เพิ่มใน Firebase > Authentication > Authorized domains",true);
+    else if(c.includes("operation-not-allowed")) toast("ยังไม่ได้เปิด Google sign-in ใน Firebase Authentication",true);
+    else if(c.includes("popup-blocked")) toast("เบราว์เซอร์บล็อกหน้าต่างล็อกอิน กรุณาอนุญาตป๊อปอัป",true);
+    else fail(e);
+  }
+}
+async function councilLogout(){ try{ await signOut(auth); }catch(e){ fail(e); } S.council=false; renderView(); }
+async function addMember(){
+  const e=S.draft.memberEmail.trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){ toast("อีเมลไม่ถูกต้อง",true); return; }
+  try{ await setDoc(doc(db,"council",e),{addedBy:S.email,ts:Date.now()}); S.draft.memberEmail=""; toast("เพิ่มสมาชิกสภาแล้ว"); renderView(); }catch(er){ fail(er); }
+}
+async function removeMember(email){
+  if(S.members.length<=1){ toast("ต้องมีสมาชิกสภาอย่างน้อย 1 คน",true); return; }
+  if(!(await ask({title:"ลบสมาชิกสภา?",body:`<b>${esc(email)}</b> จะเข้าโหมดสภาไม่ได้อีก${email===S.email?" (รวมถึงคุณเอง)":""}`,ok:"ลบ",danger:true}))) return;
+  try{ await deleteDoc(doc(db,"council",email)); toast("ลบสมาชิกแล้ว"); }catch(er){ fail(er); }
 }
 const getIdea = id => S.ideas.find(i=>i.id===id) || (S.prev||[]).find(i=>i.id===id) || (S.modal && S.modal.idea && S.modal.idea.id===id ? S.modal.idea : null);
 const visible = () => S.ideas.filter(i=>!i.hidden);
@@ -773,14 +823,6 @@ async function submitRating(evId, phase){
 }
 
 /* council */
-async function councilLogin(){
-  const pin=S.draft.pin; const h=await sha256("bbright-council:"+pin);
-  const target = S.settings.councilPinHash || await sha256("bbright-council:"+CFG.DEFAULT_PIN);
-  if(h===target){ S.council=true; try{sessionStorage.setItem("bb_council","1");}catch{} S.draft.pin=""; S.draft.pinErr=""; toast("เข้าสู่โหมดสภานักเรียนแล้ว"); }
-  else S.draft.pinErr="รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง";
-  renderView();
-}
-function councilLogout(){ S.council=false; try{sessionStorage.removeItem("bb_council");}catch{} renderView(); }
 async function createPoll(){
   const title=S.draft.pollTitle.trim(), opts=S.draft.pollOpts.map(o=>o.trim()).filter(Boolean);
   if(!title||opts.length<2){ toast("ใส่หัวข้อและตัวเลือกอย่างน้อย 2 ข้อ",true); return; }
@@ -798,10 +840,6 @@ async function createEvent(){
   }catch(e){ fail(e); }
 }
 const upd = (col,id,data,msg)=>updateDoc(doc(db,col,id),data).then(()=>msg&&toast(msg)).catch(fail);
-async function savePin(){
-  const v=S.draft.newPin.trim(); if(v.length<4){ toast("รหัสใหม่ต้องมีอย่างน้อย 4 ตัว",true); return; }
-  try{ await setDoc(doc(db,"settings","main"),{councilPinHash:await sha256("bbright-council:"+v)},{merge:true}); S.draft.newPin=""; toast("เปลี่ยนรหัสสภาแล้ว"); renderView(); }catch(e){ fail(e); }
-}
 async function saveRewards(){
   try{ await setDoc(doc(db,"settings","main"),{rewardsText:(S.draft.rewards??"").trim()},{merge:true}); toast("บันทึกข้อความรางวัลแล้ว"); }catch(e){ fail(e); }
 }
@@ -1009,17 +1047,19 @@ function rankView(){
 
 /* ---- council ---- */
 function councilLoginView(){
+  const denied = S.email && !S.council;
   return `<div class="card login"><div class="big">${ic("shield")}</div><h2 class="disp" style="font-size:22px;">โหมดสภานักเรียน</h2>
-    <p class="muted" style="margin:6px 0 14px;">ใส่รหัสผ่านเพื่อดูภาพรวมข้อมูลและจัดการระบบ</p>
-    <form data-form="pin"><input id="pinInput" type="password" class="field" style="text-align:center;" placeholder="รหัสผ่านสภานักเรียน" value="${esc(S.draft.pin)}" autocomplete="off" data-draft="pin">
-    ${S.draft.pinErr?`<div class="err">${esc(S.draft.pinErr)}</div>`:""}
-    <button class="btn primary" style="margin-top:14px;" type="submit">${ic("lock")} เข้าสู่ระบบ</button></form></div>`;
+    <p class="muted" style="margin:6px 0 16px;">สำหรับสมาชิกสภาเท่านั้น ล็อกอินด้วยบัญชี Google ของคุณ</p>
+    ${denied?`<div class="warnbar" style="text-align:left;margin-bottom:14px;">${ic("info")}<span>อีเมล <b style="word-break:break-all;">${esc(S.email)}</b> ยังไม่อยู่ในรายชื่อสภา ให้สมาชิกสภาคนอื่นเพิ่มอีเมลนี้ที่ ตั้งค่า → สมาชิกสภา</span></div>
+      <button class="btn line" data-action="clogout">${ic("logout")} ออกจากระบบ / เปลี่ยนบัญชี</button>`
+    : `<button class="btn primary" data-action="glogin">${ic("lock")} เข้าสู่ระบบด้วย Google</button>`}</div>`;
 }
 function councilView(){
   if(!S.council) return councilLoginView();
   const subs=[["overview","ภาพรวม"],["polls","ประชามติ"],["events","กิจกรรม"],["posts","ดูแลโพสต์"],["settings","ตั้งค่า"]];
   return `<div class="page-head"><div><h2>🛡️ แดชบอร์ดสภานักเรียน</h2><p>ข้อมูลเพื่อตัดสินใจ จากเสียงของนักเรียน</p></div>
-    <button class="btn line sm" data-action="clogout">${ic("logout")} ออกจากโหมดสภา</button></div>
+    <button class="btn line sm" data-action="clogout">${ic("logout")} ออกจากระบบ</button></div>
+    <p class="hint" style="margin:-8px 0 8px;word-break:break-all;">ล็อกอินเป็น ${esc(S.email||"")}</p>
     <div class="subnav">${subs.map(([k,l])=>`<button class="fchip ${S.cview===k?"active":""}" data-action="cview" data-v="${k}">${l}</button>`).join("")}</div>
     <div class="stack">${({overview:cOverview,polls:cPolls,events:cEvents,posts:cPosts,settings:cSettings})[S.cview]()}</div>`;
 }
@@ -1064,9 +1104,9 @@ function cPosts(){
     <button class="btn line sm" data-action="hide" data-id="${i.id}" data-v="${i.hidden?0:1}">${i.hidden?"แสดง":"ซ่อน"}</button><button class="icon-btn" data-action="delidea" data-id="${i.id}" aria-label="ลบถาวร">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีโพสต์</p>'}</div>`;
 }
 function cSettings(){
-  const def=!S.settings.councilPinHash;
-  return `${def?`<div class="warnbar">${ic("info")}<span>ตอนนี้ยังใช้รหัสสภาเริ่มต้น กรุณาตั้งรหัสใหม่ด้านล่างก่อนเปิดใช้งานจริง</span></div>`:""}
-  <div class="card"><h3>เปลี่ยนรหัสผ่านสภา</h3><div class="row" style="margin-top:10px;flex-wrap:nowrap;"><input class="field" type="password" data-draft="newPin" value="${esc(S.draft.newPin)}" placeholder="รหัสใหม่ (อย่างน้อย 4 ตัว)" autocomplete="new-password"><button class="btn primary sm" data-action="savepin">บันทึก</button></div></div>
+  return `<div class="card"><h3>👥 สมาชิกสภา</h3><p class="hint">สมาชิกทุกคนในรายชื่อเข้าโหมดสภาได้ด้วยบัญชี Google ของตัวเอง ไม่ต้องใช้รหัสผ่านร่วมกัน</p>
+    <div style="margin-top:6px;">${S.members.length?S.members.map(m=>`<div class="item"><div class="tt" style="word-break:break-all;">${esc(m.email)}${m.email===S.email?' <span class="chip brand">คุณ</span>':""}</div><button class="icon-btn" data-action="rmmember" data-email="${esc(m.email)}" aria-label="ลบสมาชิก">${ic("trash")}</button></div>`).join(""):'<p class="muted">กำลังโหลด...</p>'}</div>
+    <div class="row" style="margin-top:12px;flex-wrap:nowrap;"><input class="field" type="email" data-draft="memberEmail" value="${esc(S.draft.memberEmail)}" placeholder="อีเมล Google ของสมาชิกใหม่" autocomplete="off"><button class="btn primary sm" data-action="addmember">เพิ่ม</button></div></div>
   <div class="card"><h3>ข้อความรางวัล (หน้า Leaderboard)</h3><textarea class="field" rows="3" data-draft="rewards" style="margin-top:10px;min-height:80px;">${esc(S.draft.rewards??S.settings.rewardsText??CFG.DEFAULT_REWARDS)}</textarea>
     <div style="text-align:right;margin-top:10px;"><button class="btn primary sm" data-action="saverewards">บันทึก</button></div></div>`;
 }
@@ -1231,9 +1271,9 @@ const ACT = {
   rate:el=>submitRating(el.dataset.ev, el.dataset.ph),
   rankview:async el=>{ S.rankView=el.dataset.v; if(S.rankView==="prev") S.prev=null; renderView(); },
   cview:el=>{ S.cview=el.dataset.v; renderView(); },
-  clogout:councilLogout,
+  clogout:councilLogout, glogin:googleLogin, addmember:addMember, rmmember:el=>removeMember(el.dataset.email),
   addopt:()=>{ S.draft.pollOpts.push(""); renderView(); }, rmopt:el=>{ S.draft.pollOpts.splice(+el.dataset.i,1); renderView(); },
-  createpoll:createPoll, createev:createEvent, savepin:savePin, saverewards:saveRewards,
+  createpoll:createPoll, createev:createEvent, saverewards:saveRewards,
   pollstatus:el=>upd("polls",el.dataset.id,{status:el.dataset.v},el.dataset.v==="ended"?"ปิดโหวตแล้ว":"เปิดโหวตอีกครั้ง"),
   delpoll:async el=>{ if(await ask({title:"ลบประชามตินี้?",body:"ผลโหวตทั้งหมดจะหายไป",ok:"ลบ",danger:true})) { try{ await deleteDoc(doc(db,"polls",el.dataset.id)); toast("ลบแล้ว"); }catch(e){ fail(e);} } },
   delev:async el=>{ if(await ask({title:"ลบกิจกรรมนี้?",body:"คะแนนทั้งหมดจะหายไป",ok:"ลบ",danger:true})) { try{ await deleteDoc(doc(db,"events",el.dataset.id)); toast("ลบแล้ว"); }catch(e){ fail(e);} } },
@@ -1249,7 +1289,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("submit",e=>{
   const f=e.target.closest("[data-form]"); if(!f) return; e.preventDefault();
-  ({ compose:submitIdea, edit:submitEdit, del:submitDelete, comment:submitComment, claim:claimReward, pin:councilLogin })[f.dataset.form]?.(f);
+  ({ compose:submitIdea, edit:submitEdit, del:submitDelete, comment:submitComment, claim:claimReward })[f.dataset.form]?.(f);
 });
 document.addEventListener("input",e=>{
   const t=e.target;
@@ -1269,7 +1309,7 @@ async function init(){
   buildNav(); renderView();
   try{
     const app=initializeApp(firebaseConfig); db=getFirestore(app); auth=getAuth(app);
-    await new Promise((res,rej)=>{ onAuthStateChanged(auth,u=>{ if(u){ S.uid=u.uid; res(); } }); signInAnonymously(auth).catch(rej); });
+    await new Promise((res,rej)=>{ authFirst=res; onAuthStateChanged(auth,applyUser); setTimeout(()=>rej(new Error("auth timeout")),20000); });
     subscribeAll();
     const m=location.hash.match(/idea=([A-Za-z0-9]+)/); if(m) openDetail(m[1]);
     setInterval(()=>{ const r=roundInfo().id; if(r!==activeRound){ activeRound=r; S.ideas=[]; S.prev=null; S.loaded.ideas=false; subscribeIdeas(); renderView(); } else if(S.tab==="feed") updateHero(); },60000);
