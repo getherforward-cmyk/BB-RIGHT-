@@ -2,770 +2,1250 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BB RIGHT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>BB RIGHT — เสียงของทุกคน</title>
+<meta name="description" content="พื้นที่ปลอดภัยแบบไม่ระบุตัวตน ให้นักเรียนทุกคนเสนอไอเดีย โหวต และประเมินกิจกรรม เพื่อโรงเรียนที่ดีขึ้น" />
+<meta name="theme-color" content="#16304F" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  // ตั้งธีมก่อนวาดหน้า กันจอกะพริบ
+  (function(){
+    var t=null;
+    try{ t=JSON.parse(localStorage.getItem('bb_theme')); }catch(e){}
+    if(!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <style>
-  :root{
-    --navy:#142B45; --navy-2:#1F4067; --orange:#E8792F; --orange-d:#C85F1D;
-    --sky:#4FA9DC; --amber:#F4B740; --bg:#F6F5F1; --surface:#FFFFFF;
-    --ink:#1F2933; --muted:#7A8899; --line:#E7E9EC; --accent:#E8792F;
-  }
-  *{box-sizing:border-box;}
-  svg{width:16px;height:16px;flex-shrink:0;display:inline-block;vertical-align:middle;}
-  .star-btn svg{width:20px;height:20px;}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',sans-serif;}
-  h1,h2,h3,.disp{font-family:'Kanit',sans-serif;}
-  button,input,textarea,select{font-family:'Sarabun',sans-serif;}
-  ::selection{background:var(--amber);color:var(--navy);}
+:root{
+  color-scheme:light;
+  --bg:#FBF8F3; --surface:#FFFFFF; --surface2:#F6F1E9; --ink:#1C2733; --ink2:#3B4858; --muted:#657285; --line:#E9E2D6;
+  --brand:#D9560F; --brand-d:#BC4709; --brand-soft:#FFEBDD; --on-brand:#FFFFFF;
+  --navy:#16304F; --navy2:#24507F;
+  --ok:#17825A; --ok-soft:#DFF5EC; --warn:#9A6212; --warn-soft:#FFF1CF; --bad:#C93A4F; --bad-soft:#FDE4E8;
+  --sky:#2F86C0; --sky-soft:#E1F1FB; --mark-add:#CDEFDD; --mark-del:#FBD5DA;
+  --shadow:0 1px 2px rgba(22,48,79,.06),0 10px 28px rgba(22,48,79,.08);
+  --shadow-s:0 1px 2px rgba(22,48,79,.08);
+  --r:18px;
+}
+[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0D1520; --surface:#152233; --surface2:#1A2B3F; --ink:#EEF2F7; --ink2:#CBD5E1; --muted:#9AAABE; --line:#263A52;
+  --brand:#FF8442; --brand-d:#FF9A63; --brand-soft:#3B2618; --on-brand:#1A0E05;
+  --navy:#0A1422; --navy2:#17314F;
+  --ok:#4ACB95; --ok-soft:#15352A; --warn:#F2C35B; --warn-soft:#3A2E12; --bad:#FF7F90; --bad-soft:#3E1B22;
+  --sky:#62B8EC; --sky-soft:#142F43; --mark-add:#1E4A39; --mark-del:#59242E;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 28px rgba(0,0,0,.35);
+  --shadow-s:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',system-ui,sans-serif;font-size:16px;line-height:1.6;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));transition:background .25s,color .25s;}
+body.lock{overflow:hidden;}
+h1,h2,h3,h4,.disp{font-family:'Kanit','Sarabun',sans-serif;font-weight:600;line-height:1.3;margin:0;}
+p{margin:0;}
+button,input,textarea,select{font:inherit;color:inherit;}
+button{cursor:pointer;}
+a{color:var(--brand);}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--brand) 55%,transparent);outline-offset:2px;border-radius:10px;}
+.ic{width:18px;height:18px;flex-shrink:0;display:inline-block;vertical-align:middle;}
+.ic.on{fill:currentColor;}
+.shell{max-width:1120px;margin:0 auto;padding:0 16px;}
+.muted{color:var(--muted);}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
 
-  #app{max-width:640px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:92px;}
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(14px);
+  -webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid var(--line);}
+.topbar-in{display:flex;align-items:center;gap:14px;height:64px;}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink);background:none;border:0;padding:0;text-align:left;}
+.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(150deg,var(--navy2),var(--navy));display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 6px 14px rgba(10,22,38,.25);}
+.logo svg{width:25px;height:25px;}
+.brand b{font-family:'Kanit';font-size:19px;letter-spacing:.3px;display:block;line-height:1.1;}
+.brand b i{font-style:normal;color:var(--brand);}
+.brand small{font-size:12px;color:var(--muted);display:block;line-height:1.2;}
+.dnav{display:none;margin-left:auto;gap:4px;}
+.dnav button{display:flex;align-items:center;gap:7px;border:0;background:none;padding:9px 14px;border-radius:999px;color:var(--ink2);font-weight:500;font-size:15px;}
+.dnav button:hover{background:var(--surface2);}
+.dnav button.active{background:var(--navy);color:#fff;}
+[data-theme="dark"] .dnav button.active{background:var(--surface2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line);}
+.icon-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink2);flex-shrink:0;}
+.icon-btn:hover{background:var(--surface2);}
+.icon-btn.small{width:34px;height:34px;border-radius:10px;border:0;background:transparent;}
+.topbar .icon-btn{margin-left:auto;}
+.dnav + .icon-btn{margin-left:6px;}
 
-  /* ---------- desktop / wide screens ---------- */
-  @media (min-width:860px){
-    html,body{background:#E7EAEF;}
-    #app{
-      max-width:760px;background:var(--bg);
-      box-shadow:0 0 0 1px rgba(20,43,69,.05),0 24px 60px rgba(20,43,69,.14);
-      margin:28px auto;min-height:calc(100vh - 56px);border-radius:24px;overflow:hidden;
-    }
-    .hero{padding-left:36px;padding-right:36px;border-radius:0;}
-    .content{padding-left:28px;padding-right:28px;}
-    .bottomnav{max-width:520px;}
-    .stack .card, .post{transition:box-shadow .15s;}
-    .option-btn:hover, .navlink-row a:hover{cursor:pointer;}
-  }
+/* ---------- bottom nav ---------- */
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;gap:2px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;border:0;background:none;border-radius:14px;color:var(--muted);font-size:11.5px;font-weight:500;min-width:0;}
+.bnav button .ic{width:22px;height:22px;}
+.bnav button.active{color:var(--brand);background:var(--brand-soft);}
+@media (min-width:760px){ .dnav{display:flex;} .bnav{display:none;} body{padding-bottom:40px;} }
 
-  /* ---------- hero ---------- */
-  .hero{
-    background:linear-gradient(160deg,var(--navy) 0%,var(--navy-2) 100%);
-    padding:26px 20px 68px;position:relative;overflow:hidden;
-    border-radius:0 0 28px 28px;
-  }
-  .hero-net{position:absolute;top:-16px;right:-16px;width:170px;height:150px;opacity:.16;pointer-events:none;}
-  .hero-top{display:flex;align-items:center;gap:13px;position:relative;z-index:1;}
-  .badge{
-    width:54px;height:54px;border-radius:17px;flex-shrink:0;position:relative;
-    background:linear-gradient(150deg,#2A4E78 0%,var(--navy) 65%);
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 8px 20px rgba(10,22,38,.45),inset 0 0 0 1px rgba(255,255,255,.14);
-  }
-  .badge svg{width:32px;height:32px;}
-  .login-icon svg{width:36px;height:36px;}
-  .hero-title{color:#fff;font-weight:700;font-size:23px;letter-spacing:.3px;line-height:1.1;font-family:'Kanit';}
-  .hero-title .hl{color:var(--orange);}
-  .hero-sub{color:#C7D2E0;font-size:12.5px;margin-top:2px;}
-  .hero-stats{display:flex;gap:10px;margin-top:22px;position:relative;z-index:1;}
-  .hero-stat{
-    flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
-    border-radius:14px;padding:10px 12px;backdrop-filter:blur(2px);
-  }
-  .hero-stat b{color:#fff;font-size:18px;display:block;font-family:'Kanit';}
-  .hero-stat span{color:#C7D2E0;font-size:11px;}
+/* ---------- hero ---------- */
+.hero{margin-top:18px;border-radius:26px;padding:26px 22px;color:#fff;position:relative;overflow:hidden;
+  background:radial-gradient(520px 260px at 92% -10%,rgba(242,107,33,.55),transparent 70%),radial-gradient(420px 240px at -5% 110%,rgba(79,169,220,.45),transparent 70%),linear-gradient(160deg,#16304F,#24507F);
+  display:grid;gap:20px;}
+.hero h1{font-size:clamp(26px,5.4vw,40px);font-weight:700;}
+.hero h1 span{color:#FFB27F;display:block;}
+.hero p{color:#D5E0EE;max-width:46ch;margin-top:8px;}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px;}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.hstat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:12px 12px;}
+.hstat b{font-family:'Kanit';font-size:24px;display:block;line-height:1.1;}
+.hstat span{font-size:12px;color:#D5E0EE;}
+@media (min-width:860px){ .hero{grid-template-columns:1.25fr 1fr;align-items:center;padding:34px 36px;} }
 
-  /* ---------- content ---------- */
-  .content{padding:0 16px;margin-top:-40px;position:relative;z-index:2;}
-  .stack{display:flex;flex-direction:column;gap:14px;}
+/* ---------- layout ---------- */
+.layout{display:grid;gap:22px;margin-top:22px;}
+.layout>*,.controls>*{min-width:0;}
+@media (min-width:980px){ .layout{grid-template-columns:minmax(0,1fr) 330px;align-items:start;} .side{position:sticky;top:84px;} }
+.side{display:none;gap:14px;}
+@media (min-width:980px){ .side{display:grid;} }
+.page-head{margin:24px 0 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;}
+.page-head h2{font-size:26px;}
+.page-head p{color:var(--muted);font-size:14.5px;margin-top:2px;}
 
-  .card{
-    background:var(--surface);border-radius:18px;padding:16px 16px;
-    border:1px solid var(--line);border-top:3px solid var(--accent);
-  }
-  .card-title{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--navy);font-size:14.5px;margin-bottom:13px;}
-  .icon-chip{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--accent);}
-  .icon-chip svg{width:16px;height:16px;stroke:#fff;color:#fff;}
+/* ---------- generic ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-s);}
+.card h3{font-size:17px;}
+.stack{display:grid;gap:14px;}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.row.sb{justify-content:space-between;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid transparent;border-radius:999px;padding:10px 20px;font-weight:600;font-size:15px;
+  transition:transform .12s,background .15s,box-shadow .15s;white-space:nowrap;}
+.btn:active{transform:scale(.97);}
+.btn.primary{background:var(--brand);color:var(--on-brand);box-shadow:0 6px 16px color-mix(in srgb,var(--brand) 32%,transparent);}
+.btn.primary:hover{background:var(--brand-d);}
+.btn.line{background:var(--surface);border-color:var(--line);color:var(--ink);}
+.btn.line:hover{border-color:var(--ink2);}
+.btn.soft{background:var(--brand-soft);color:var(--brand);}
+.btn.glass{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff;}
+.btn.glass:hover{background:rgba(255,255,255,.22);}
+.btn.danger{background:var(--bad-soft);color:var(--bad);}
+.btn.sm{padding:7px 14px;font-size:13.5px;}
+.btn[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none;}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--surface2);color:var(--ink2);border:1px solid transparent;white-space:nowrap;}
+.chip .ic{width:14px;height:14px;}
+.chip.ok{background:var(--ok-soft);color:var(--ok);} .chip.warn{background:var(--warn-soft);color:var(--warn);}
+.chip.bad{background:var(--bad-soft);color:var(--bad);} .chip.brand{background:var(--brand-soft);color:var(--brand);}
+.chip.hero-chip{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.25);}
+.chip.cat{background:color-mix(in srgb,var(--c) 14%,var(--surface));color:color-mix(in srgb,var(--c) 70%,var(--ink));}
+.field,select.field{width:100%;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);padding:11px 14px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.field:focus{border-color:var(--brand);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 18%,transparent);}
+textarea.field{resize:vertical;min-height:110px;line-height:1.6;}
+label.lbl{display:block;font-size:13.5px;font-weight:600;margin:14px 0 6px;color:var(--ink2);}
+.hint{font-size:12.5px;color:var(--muted);margin-top:5px;}
+.err{color:var(--bad);font-size:13.5px;margin-top:8px;font-weight:500;}
+.counter{float:right;font-weight:400;}
+.empty{text-align:center;color:var(--muted);padding:38px 14px;border:1.5px dashed var(--line);border-radius:var(--r);}
+.empty b{display:block;font-size:34px;margin-bottom:4px;}
 
-  .bubble{position:relative;padding-left:14px;}
-  .bubble::before{
-    content:'';position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:4px;
-  }
+/* ---------- feed ---------- */
+.controls{display:grid;gap:12px;}
+@media (min-width:640px){ .controls{grid-template-columns:auto 1fr;align-items:center;} }
+.seg{display:flex;background:var(--surface2);border-radius:999px;padding:4px;gap:2px;overflow:auto;}
+.seg button{flex:1;border:0;background:none;padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--ink2);white-space:nowrap;}
+.seg button.active{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-s);}
+.search{position:relative;display:block;}
+.search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);}
+.search input{padding-left:42px;border-radius:999px;}
+.chips-scroll{display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none;}
+.chips-scroll::-webkit-scrollbar{display:none;}
+.fchip{flex-shrink:0;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:500;color:var(--ink2);}
+.fchip.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+[data-theme="dark"] .fchip.active{background:var(--brand);border-color:var(--brand);color:var(--on-brand);}
+.list{display:grid;gap:14px;margin-top:10px;}
+.idea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 12px;box-shadow:var(--shadow-s);cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;position:relative;}
+.idea:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--brand) 35%,var(--line));}
+.idea.top1{border-color:#E9B949;}
+.idea-tags{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.idea h3{font-size:18px;margin:10px 0 4px;}
+.idea .txt{color:var(--ink2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;word-break:break-word;}
+.idea-foot{display:flex;align-items:center;gap:14px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);}
+.idea-foot .meta{display:inline-flex;align-items:center;gap:5px;font-size:13.5px;color:var(--muted);}
+.idea-foot .sp{margin-left:auto;}
+.up{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px 6px 11px;font-weight:700;color:var(--ink2);}
+.up:hover{border-color:var(--brand);color:var(--brand);}
+.up.on{background:var(--brand);border-color:var(--brand);color:var(--on-brand);}
+.up.pop{animation:pop .35s;}
+@keyframes pop{40%{transform:scale(1.18);}}
+.medal{font-size:19px;line-height:1;}
+.sk{height:132px;border-radius:var(--r);background:linear-gradient(100deg,var(--surface2) 30%,var(--surface) 50%,var(--surface2) 70%);background-size:200% 100%;animation:sh 1.3s linear infinite;}
+@keyframes sh{to{background-position:-200% 0;}}
+.fab{position:fixed;right:16px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:44;width:58px;height:58px;border-radius:50%;border:0;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;
+  box-shadow:0 10px 26px color-mix(in srgb,var(--brand) 45%,transparent);}
+.fab .ic{width:26px;height:26px;}
+@media (min-width:760px){ .fab{display:none;} }
 
-  textarea.field,input.field{
-    width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;
-    font-size:14px;outline:none;background:#FCFCFB;color:var(--ink);transition:border-color .15s;
-  }
-  textarea.field{resize:vertical;min-height:70px;}
-  textarea.field:focus,input.field:focus{border-color:var(--orange);background:#fff;}
-  select.field{
-    border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;font-size:13px;
-    background:#FCFCFB;color:var(--ink);outline:none;
-  }
+/* side */
+.rules{display:grid;gap:10px;margin:12px 0 0;padding:0;list-style:none;font-size:14.5px;color:var(--ink2);}
+.rules li{display:flex;gap:10px;align-items:flex-start;}
+.rules .em{width:30px;height:30px;border-radius:10px;background:var(--brand-soft);display:grid;place-items:center;flex-shrink:0;font-size:15px;}
+.mini{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;}
+.mini:first-of-type{border-top:0;}
+.mini b{font-size:14.5px;display:block;line-height:1.4;}
+.mini small{color:var(--muted);}
 
-  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+/* ---------- polls ---------- */
+.poll h3{font-size:19px;}
+.opt{display:flex;width:100%;text-align:left;align-items:center;gap:12px;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:13px 15px;margin-top:9px;font-weight:500;transition:border-color .15s,background .15s;}
+.opt:hover{border-color:var(--brand);background:var(--brand-soft);}
+.opt .rad{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;}
+.opt:hover .rad{border-color:var(--brand);}
+.res{position:relative;border-radius:14px;overflow:hidden;background:var(--surface2);margin-top:9px;padding:11px 14px;display:flex;justify-content:space-between;gap:10px;font-weight:500;}
+.res .fill{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--c) 26%,transparent);transition:width .6s cubic-bezier(.2,.8,.2,1);}
+.res>*{position:relative;}
+.res.mine{box-shadow:inset 0 0 0 2px var(--c);}
+.res .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-right:8px;}
+.donut-wrap{display:grid;gap:16px;align-items:center;}
+@media (min-width:560px){ .donut-wrap{grid-template-columns:190px 1fr;} }
+.donut{width:190px;height:190px;margin:0 auto;display:block;}
+.donut text{font-family:'Kanit';fill:var(--ink);}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ok);font-weight:600;}
+.live::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite;}
+@keyframes pulse{50%{opacity:.25;}}
 
-  .btn{border:none;border-radius:999px;font-weight:600;font-size:13.5px;cursor:pointer;
-    display:inline-flex;align-items:center;gap:6px;padding:10px 18px;transition:transform .1s ease,box-shadow .15s;}
-  .btn:active{transform:scale(.97);}
-  .btn-orange{background:var(--orange);color:#fff;box-shadow:0 4px 12px rgba(232,121,47,.32);}
-  .btn-orange:hover{background:var(--orange-d);}
-  .btn-navy{background:var(--navy);color:#fff;}
-  .btn-outline{background:#fff;color:var(--navy);border:1.5px solid var(--line);}
-  .btn-outline:hover{border-color:var(--navy);}
-  .btn-ghost{background:transparent;color:var(--muted);padding:6px;border-radius:8px;}
-  .btn-ghost:hover{background:#F1F3F5;}
-  .btn[disabled]{opacity:.55;cursor:default;}
+/* ---------- events ---------- */
+.stars{display:flex;gap:6px;margin:6px 0;}
+.star{border:0;background:none;padding:2px;color:var(--line);transition:transform .1s;}
+.star .ic{width:36px;height:36px;stroke-width:1.5;}
+.star.on{color:#F2A91B;} .star:hover{transform:scale(1.12);}
+.tagrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.tagbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:14px;}
+.tagbtn.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.cmp>div{background:var(--surface2);border-radius:16px;padding:12px 14px;text-align:center;}
+.cmp b{font-family:'Kanit';font-size:30px;display:block;line-height:1.1;}
+.cmp small{color:var(--muted);}
+.delta{font-weight:700;font-size:13.5px;}
+.delta.up1{color:var(--ok);} .delta.dn{color:var(--bad);}
+.dist{display:grid;gap:5px;margin-top:12px;}
+.dist .r{display:grid;grid-template-columns:20px 1fr 28px;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);}
+.dist .t{height:8px;border-radius:6px;background:var(--surface2);overflow:hidden;} .dist .t i{display:block;height:100%;background:#F2A91B;border-radius:6px;}
+.phase{display:flex;gap:6px;flex-wrap:wrap;}
 
-  .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:600;}
-  .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+/* ---------- rank ---------- */
+.podium{display:grid;gap:14px;}
+@media (min-width:760px){ .podium{grid-template-columns:1fr 1.12fr 1fr;align-items:end;} .podium .p1{order:2;} .podium .p2{order:1;} .podium .p3{order:3;} }
+.pod{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:20px 18px;text-align:center;box-shadow:var(--shadow-s);position:relative;display:flex;flex-direction:column;gap:6px;}
+.pod .big{font-size:44px;line-height:1;}
+.pod.p1{background:linear-gradient(180deg,color-mix(in srgb,#F2B233 22%,var(--surface)),var(--surface));border-color:#E9B949;padding-top:30px;padding-bottom:26px;}
+.pod h3{font-size:17px;cursor:pointer;} .pod h3:hover{color:var(--brand);}
+.pod .pts{font-family:'Kanit';font-size:15px;color:var(--brand);font-weight:600;}
+.pod .v{font-size:13.5px;color:var(--muted);}
+.steps{counter-reset:s;display:grid;gap:10px;margin:12px 0 0;padding:0;list-style:none;}
+.steps li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:var(--ink2);}
+.steps li::before{content:counter(s);width:26px;height:26px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:700;display:grid;place-items:center;flex-shrink:0;font-size:13px;}
 
-  .bar-row{display:flex;align-items:center;gap:10px;}
-  .bar-label{width:132px;font-size:12px;color:var(--muted);flex-shrink:0;}
-  .bar-track{flex:1;background:#EEF1F4;border-radius:6px;height:9px;overflow:hidden;}
-  .bar-fill{height:100%;border-radius:6px;transition:width .5s ease;}
-  .bar-val{width:22px;text-align:right;font-size:12px;color:var(--navy);font-weight:600;}
+/* ---------- council ---------- */
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+@media (min-width:760px){ .tiles{grid-template-columns:repeat(4,1fr);} }
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;}
+.tile b{font-family:'Kanit';font-size:28px;display:block;line-height:1.1;}
+.tile span{font-size:13px;color:var(--muted);}
+.bars{display:grid;gap:9px;margin-top:12px;}
+.bar{display:grid;grid-template-columns:96px 1fr 28px;gap:10px;align-items:center;font-size:13.5px;}
+@media (min-width:560px){ .bar{grid-template-columns:130px 1fr 30px;} }
+.bar .t{height:11px;border-radius:7px;background:var(--surface2);overflow:hidden;} .bar .t i{display:block;height:100%;border-radius:7px;transition:width .5s;}
+.bar b{text-align:right;}
+.item{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);}
+.item:first-child{border-top:0;}
+.item .tt{font-weight:600;line-height:1.4;}
+.hidden-post{opacity:.55;}
+.login{max-width:420px;margin:26px auto;text-align:center;}
+.login .big{width:64px;height:64px;border-radius:20px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;margin:0 auto 12px;}
+.login .big .ic{width:32px;height:32px;}
+.subnav{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none;}
+.subnav::-webkit-scrollbar{display:none;}
+.warnbar{background:var(--warn-soft);color:var(--warn);border-radius:14px;padding:10px 14px;font-size:14px;font-weight:500;display:flex;gap:10px;align-items:flex-start;}
 
-  .post{background:var(--surface);border-radius:16px;padding:14px 16px 12px;border:1px solid var(--line);position:relative;}
-  .post-text{margin:9px 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink);white-space:pre-wrap;}
-  .post-foot{display:flex;justify-content:space-between;align-items:center;}
-  .time{font-size:11.5px;color:var(--muted);}
-  .like{display:inline-flex;align-items:center;gap:5px;background:none;border:none;font-size:13px;cursor:pointer;color:var(--muted);}
-  .like.liked{color:var(--orange);}
+/* ---------- modal ---------- */
+.ov{position:fixed;inset:0;z-index:80;background:rgba(8,16,28,.55);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s;}
+.ov.l2{z-index:95;}
+@keyframes fade{from{opacity:0;}}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:94dvh;overflow-y:auto;border-radius:26px 26px 0 0;padding:20px 20px calc(24px + env(safe-area-inset-bottom));animation:up .28s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 40px rgba(0,0,0,.25);}
+@keyframes up{from{transform:translateY(40px);opacity:0;}}
+@media (min-width:760px){ .ov{align-items:center;padding:20px;} .sheet{border-radius:26px;} .sheet.wide{max-width:760px;} }
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.sheet-head h2{font-size:21px;}
+.sheet h2.title{font-size:23px;margin:12px 0 8px;}
+.body-txt{white-space:pre-wrap;word-break:break-word;color:var(--ink2);}
+.secret{font-family:'Kanit',monospace;font-size:clamp(20px,6vw,28px);letter-spacing:1.5px;text-align:center;background:var(--surface);border:2px dashed var(--brand);border-radius:16px;padding:16px 10px;margin:14px 0;font-weight:600;user-select:all;word-break:break-all;}
+.cm{padding:12px 0;border-top:1px solid var(--line);display:flex;gap:11px;}
+.cm:first-child{border-top:0;}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface2);font-size:17px;flex-shrink:0;}
+.cm .who{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.cm .who b{color:var(--ink2);}
+.cm p{white-space:pre-wrap;word-break:break-word;}
+.ver{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--surface);margin-top:12px;}
+.ba{display:grid;gap:10px;margin-top:10px;}
+@media (min-width:600px){ .ba{grid-template-columns:1fr 1fr;} }
+.ba>div{background:var(--surface2);border-radius:12px;padding:11px 13px;font-size:14.5px;white-space:pre-wrap;word-break:break-word;}
+.ba small{display:block;font-weight:700;margin-bottom:4px;color:var(--muted);}
+mark.add{background:var(--mark-add);color:inherit;border-radius:4px;padding:0 1px;}
+mark.del{background:var(--mark-del);color:inherit;border-radius:4px;padding:0 1px;text-decoration:line-through;}
+.voucher{border-radius:18px;padding:18px;text-align:center;background:linear-gradient(150deg,var(--navy2),var(--navy));color:#fff;margin-top:14px;}
+.voucher b{font-family:'Kanit';font-size:34px;display:block;color:#FFB27F;}
 
-  .empty{text-align:center;color:var(--muted);font-size:13.5px;padding:30px 10px;}
-
-  .option-btn{width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);padding:11px 13px;
-    border-radius:12px;font-size:13.5px;cursor:pointer;color:var(--ink);margin-bottom:8px;transition:border-color .15s;}
-  .option-btn:hover{border-color:var(--orange);}
-  .result-row{position:relative;background:#EEF1F4;border-radius:12px;overflow:hidden;padding:10px 13px;margin-bottom:8px;}
-  .result-fill{position:absolute;inset:0;background:rgba(79,169,220,.22);}
-  .result-inner{position:relative;display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink);}
-
-  .stars{display:flex;gap:3px;}
-  .star-btn{background:none;border:none;cursor:pointer;padding:2px;}
-
-  .navlink-row{display:flex;gap:6px;}
-
-  /* bottom nav */
-  .bottomnav{
-    position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:calc(100% - 32px);max-width:576px;
-    background:var(--navy);border-radius:20px;display:flex;padding:8px;box-shadow:0 12px 30px rgba(20,43,69,.35);
-    z-index:50;
-  }
-  .navbtn{
-    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;border-radius:14px;
-    background:transparent;border:none;cursor:pointer;color:#B8C4D4;font-size:10.5px;font-family:'Sarabun';
-  }
-  .navbtn.active{background:rgba(255,255,255,.12);color:#fff;}
-  .navbtn svg{width:19px;height:19px;}
-  .navbtn.active::after{content:'';width:4px;height:4px;border-radius:50%;background:var(--accent);margin-top:1px;}
-
-  .login-card{text-align:center;padding:34px 20px;}
-  .login-card input{max-width:220px;margin:14px auto 0;text-align:center;}
-  .err{color:#D65C4A;font-size:12.5px;margin-top:6px;}
-
-  /* ---------- toast ---------- */
-  .toast{
-    position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-18px);
-    background:var(--navy);color:#fff;padding:11px 20px 11px 14px;border-radius:999px;
-    display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:600;
-    box-shadow:0 12px 28px rgba(20,43,69,.4);opacity:0;pointer-events:none;
-    transition:opacity .25s ease,transform .25s ease;z-index:200;max-width:88%;
-  }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .toast-icon{
-    width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-    background:var(--orange);border-radius:50%;padding:4px;
-  }
-  .toast-icon svg{width:12px;height:12px;stroke:#fff;color:#fff;}
-
-  @media (min-width:640px){ #app{padding-bottom:30px;} .bottomnav{position:static;transform:none;width:100%;margin:24px 16px 0;box-shadow:none;} }
+/* toast */
+#toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-30px);z-index:200;background:var(--navy);color:#fff;padding:11px 18px;border-radius:999px;font-weight:600;font-size:14.5px;
+  box-shadow:0 12px 28px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;max-width:92%;width:max-content;display:flex;gap:9px;align-items:center;}
+#toast.show{opacity:1;transform:translate(-50%,0);}
+#toast.bad{background:var(--bad);color:#fff;}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}
 </style>
 </head>
 <body>
-<div id="app"></div>
+<header class="topbar">
+  <div class="shell topbar-in">
+    <button class="brand" data-action="tab" data-tab="feed" aria-label="BB RIGHT หน้าแรก">
+      <span class="logo"><svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="M6 8a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4v9a4 4 0 0 1-4 4H15l-6.5 5.6a1 1 0 0 1-1.65-.76V8Z" fill="#fff"/><path d="M11 13.4l3 3 6.2-6.8" stroke="#E8792F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="29" cy="8" r="5.2" fill="#F4B740"/></svg></span>
+      <span><b><i>BB</i> RIGHT</b><small>เสียงของทุกคน</small></span>
+    </button>
+    <nav class="dnav" id="dnav" aria-label="เมนูหลัก"></nav>
+    <button class="icon-btn" data-action="theme" id="themeBtn" aria-label="สลับโหมดสว่าง/มืด"></button>
+  </div>
+</header>
+<main class="shell" id="view"></main>
+<nav class="bnav" id="bnav" aria-label="เมนูหลัก"></nav>
+<div id="modal-root"></div>
+<div id="modal-root2"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
-<!-- ---------- Firebase ---------- -->
-<script>
-  // สร้าง Promise ไว้ล่วงหน้าแบบ sync ก่อน เพื่อกันปัญหา module script (ด้านล่าง) โหลดช้ากว่าสคริปต์หลัก
-  window.__fbReady = new Promise((resolve)=>{ window.__fbResolveReady = resolve; });
-</script>
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, query, where, orderBy,
+         runTransaction, writeBatch, increment, deleteField, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDVbgRKBdU268hgGyk_9mwZHge9jkEH_y4",
-    authDomain: "bb-right.firebaseapp.com",
-    projectId: "bb-right",
-    storageBucket: "bb-right.firebasestorage.app",
-    messagingSenderId: "678551506305",
-    appId: "1:678551506305:web:7cd9e2486ebbfdea3cac80"
-  };
-
-  const fbApp = initializeApp(firebaseConfig);
-  const db = getFirestore(fbApp);
-  const auth = getAuth(fbApp);
-
-  onAuthStateChanged(auth, (user)=>{
-    if(user){
-      // เมื่อ sign-in แบบไม่ระบุตัวตนสำเร็จ ค่อย resolve ให้สคริปต์หลักเริ่มอ่าน/เขียนข้อมูลได้
-      window.__fbResolveReady({ db, doc, getDoc, setDoc, uid: user.uid });
-    }
-  });
-  signInAnonymously(auth).catch((err)=>console.error("Firebase auth error:", err));
-</script>
-
-<script>
-/* ---------------- constants ---------------- */
-const CATEGORIES = [
-  { name:"การเรียนการสอน", color:"#142B45" },
-  { name:"สถานที่ & สิ่งอำนวยความสะดวก", color:"#4FA9DC" },
-  { name:"กิจกรรม & ชมรม", color:"#E8792F" },
-  { name:"โรงอาหาร", color:"#F4B740" },
-  { name:"กฎระเบียบ", color:"#7A8899" },
-  { name:"อื่น ๆ", color:"#9C7FB0" },
+/* =====================================================================
+   CONFIG — ปรับค่าได้ที่นี่
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDVbgRKBdU268hgGyk_9mwZHge9jkEH_y4",
+  authDomain: "bb-right.firebaseapp.com",
+  projectId: "bb-right",
+  storageBucket: "bb-right.firebasestorage.app",
+  messagingSenderId: "678551506305",
+  appId: "1:678551506305:web:7cd9e2486ebbfdea3cac80"
+};
+const CFG = {
+  ROUND_DAYS: 14,                                  // 1 รอบ = 2 สัปดาห์
+  ROUND_EPOCH: Date.UTC(2026, 9, 18, 17, 0, 0),    // เริ่มรอบแรก 19 ต.ค. 2026 เวลา 00:00 (ไทย)
+  EDIT_MIN: 30,                                    // แก้ไขได้ภายใน 30 นาที
+  POINTS: [30, 20, 10],                            // แต้มบุญอันดับ 1-3
+  DEFAULT_PIN: "2569",                             // รหัสสภาเริ่มต้น (เปลี่ยนได้ในหน้าสภา > ตั้งค่า)
+  DEFAULT_REWARDS: "อันดับ 1 ได้ 30 แต้มบุญ · อันดับ 2 ได้ 20 แต้มบุญ · อันดับ 3 ได้ 10 แต้มบุญ พร้อมเกียรติบัตรจากสภานักเรียน",
+};
+const CATS = [
+  { id:"study",    name:"การเรียนการสอน",              short:"การเรียน",  emoji:"📚", color:"#2F86C0" },
+  { id:"place",    name:"สถานที่ & สิ่งอำนวยความสะดวก", short:"สถานที่",   emoji:"🏫", color:"#17825A" },
+  { id:"activity", name:"กิจกรรม & ชมรม",              short:"กิจกรรม",   emoji:"🎉", color:"#D9560F" },
+  { id:"food",     name:"โรงอาหาร",                    short:"โรงอาหาร",  emoji:"🍜", color:"#C28A0B" },
+  { id:"rule",     name:"กฎระเบียบ",                   short:"กฎระเบียบ", emoji:"📋", color:"#7E57B8" },
+  { id:"other",    name:"อื่น ๆ",                      short:"อื่น ๆ",    emoji:"💬", color:"#657285" },
 ];
-const DEFAULT_PIN = "2569";
+const EV_TAGS = [["vibe","บรรยากาศ"],["mgmt","การจัดการ"],["fun","ความสนุก"],["time","ช่วงเวลา"],["place","สถานที่"],["food","อาหาร/เครื่องดื่ม"],["sound","เสียง/ระบบ"]];
+const POLL_COLORS = ["#E8792F","#3E9BD6","#2FA67A","#8E6BBF","#E0A820","#E5586B"];
 
-const ICONS = {
-  logo:`<svg viewBox="0 0 36 36" fill="none">
-    <path d="M6 8a4 4 0 0 1 4-4h14a4 4 0 0 1 4 4v9a4 4 0 0 1-4 4H15l-6.5 5.6a1 1 0 0 1-1.65-.76V8Z" fill="#fff"/>
-    <path d="M11 13.4l3 3 6.2-6.8" stroke="#E8792F" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="29" cy="8" r="5.2" fill="#F4B740"/>
-    <path d="M29 5v1.6M29 9.4V11M26.4 8H28M30 8h1.6" stroke="#142B45" stroke-width="1.3" stroke-linecap="round"/>
-  </svg>`,
-  feed:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h11M4 19h16"/></svg>`,
-  wish:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.3 1 2.5h6c0-1.2.4-1.9 1-2.5A6 6 0 0 0 12 3Z"/></svg>`,
-  vote:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 12 2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>`,
-  council:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-3Z"/></svg>`,
-  heart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 8.6c0 5-8.8 10.2-8.8 10.2S3.2 13.6 3.2 8.6a4.6 4.6 0 0 1 8.8-1.8 4.6 4.6 0 0 1 8.8 1.8Z"/></svg>`,
-  heartFill:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.8 8.6c0 5-8.8 10.2-8.8 10.2S3.2 13.6 3.2 8.6a4.6 4.6 0 0 1 8.8-1.8 4.6 4.6 0 0 1 8.8 1.8Z"/></svg>`,
-  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg>`,
-  send:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 11 18-8-8 18-2.5-7L3 11Z"/></svg>`,
-  lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`,
-  unlock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 7-2.6"/></svg>`,
-  plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`,
-  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 6 12 12M18 6 6 18"/></svg>`,
-  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5 9-9"/></svg>`,
-  star:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 3 2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6L12 3Z"/></svg>`,
-  starFill:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6L12 3Z"/></svg>`,
-  sparkle:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>`,
-  clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
-  chart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>`,
+/* =====================================================================
+   helpers
+   ===================================================================== */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch{ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} },
 };
-
-/* ---------------- state ---------------- */
-let state = {
-  posts: [], wishes: [], polls: [],
-  settings: { wishOpen:false, wishDeadline:null, councilPin: DEFAULT_PIN, lastResetMonth:null },
-  mine: { likedPosts:[], votedPolls:[], ratedPolls:[] },
-  tab: "feed", isCouncil:false, councilView:"dashboard",
-  draft: { postText:"", postCat: CATEGORIES[0].name, postName:"", wishText:"", pinInput:"", pinError:"",
-           pollTitle:"", pollOpts:["",""],
-           feedFilterCat:"all", feedSearchText:"" }
-};
-
-/* ---------------- storage helpers (Firebase Firestore) ---------------- */
-// shared=true  -> เก็บที่ collection "shared" ทุกคนอ่าน/เขียนร่วมกัน (posts, wishes, polls, settings)
-// shared=false -> เก็บแยกตามเครื่อง/ผู้ใช้ที่ collection "users/{uid}/private" (เช่น ไลค์ของฉัน)
-async function loadJSON(key, shared, fallback){
-  try{
-    const fb = await window.__fbReady;
-    const ref = shared ? fb.doc(fb.db,"shared",key) : fb.doc(fb.db,"users",fb.uid,"private",key);
-    const snap = await fb.getDoc(ref);
-    return snap.exists() ? snap.data().value : fallback;
-  }catch(e){ console.error("loadJSON failed", key, e); return fallback; }
-}
-async function saveJSON(key, value, shared){
-  try{
-    const fb = await window.__fbReady;
-    const ref = shared ? fb.doc(fb.db,"shared",key) : fb.doc(fb.db,"users",fb.uid,"private",key);
-    await fb.setDoc(ref, { value, updatedAt: Date.now() });
-  }catch(e){ console.error("saveJSON failed", key, e); }
-}
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
-function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const catOf = id => CATS.find(c=>c.id===id) || CATS[5];
+const fmtDate = ts => new Date(ts).toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});
+const fmtDT = ts => new Date(ts).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
 function timeAgo(ts){
-  const s=Math.floor((Date.now()-ts)/1000);
+  const s=Math.max(0,Math.floor((Date.now()-ts)/1000));
   if(s<60) return "เมื่อสักครู่";
   const m=Math.floor(s/60); if(m<60) return m+" นาทีที่แล้ว";
   const h=Math.floor(m/60); if(h<24) return h+" ชั่วโมงที่แล้ว";
-  return Math.floor(h/24)+" วันที่แล้ว";
+  const d=Math.floor(h/24); if(d<30) return d+" วันที่แล้ว";
+  return fmtDate(ts);
 }
-function catColor(name){ const c=CATEGORIES.find(c=>c.name===name); return c?c.color:"#999"; }
-const TAB_ACCENT = { feed:"#E8792F", wish:"#F4B740", vote:"#4FA9DC", council:"#9C7FB0" };
-function accent(){ return TAB_ACCENT[state.tab] || "#E8792F"; }
-function cardTitle(icon,label){ return `<div class="card-title"><span class="icon-chip">${ICONS[icon]}</span>${esc(label)}</div>`; }
-function isWishOpenNow(){
-  return state.settings.wishOpen && (!state.settings.wishDeadline || new Date() <= new Date(state.settings.wishDeadline));
+function cyrb53(str, seed=0){
+  let h1=0xdeadbeef^seed, h2=0x41c6ce57^seed;
+  for(let i=0,ch;i<str.length;i++){ ch=str.charCodeAt(i); h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677); }
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return 4294967296*(2097151&h2)+(h1>>>0);
 }
-function monthKey(d){ d=d||new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
-function monthLabel(key){
-  const [y,m] = key.split("-").map(Number);
-  return new Date(y, m-1, 1).toLocaleDateString("th-TH",{month:"long",year:"numeric"});
+async function sha256(str){
+  try{
+    if(window.crypto && crypto.subtle){
+      const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+    }
+  }catch{}
+  return cyrb53(str).toString(16)+cyrb53(str,7).toString(16);
 }
-// รีเซ็ตความคิดเห็น (feed) ทุกครั้งที่ขึ้นเดือนใหม่ เพื่อรีเซ็ตยอดนิยมประจำเดือนและลดภาระข้อมูลสะสม
-async function checkMonthlyReset(){
-  const nowKey = monthKey();
-  if(state.settings.lastResetMonth === nowKey) return;
-  state.posts = [];
-  state.mine.likedPosts = [];
-  const nextSettings = {...state.settings, lastResetMonth: nowKey};
-  await saveJSON("posts-data", {posts:[]}, true);
-  await saveJSON("settings-data", nextSettings, true);
-  await saveJSON("my-interactions", state.mine, false);
-  state.settings = nextSettings;
+const ALPHA = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function genCode(){
+  const a = new Uint32Array(12); crypto.getRandomValues(a);
+  const c = [...a].map(n=>ALPHA[n % ALPHA.length]).join("");
+  return `BB-${c.slice(0,4)}-${c.slice(4,8)}-${c.slice(8,12)}`;
 }
+const normCode = s => String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^BB/,"");
+const codeHash = (id, code) => sha256("bbright:"+id+":"+normCode(code));
+const ANIMALS = ["🦊","🐼","🐯","🐸","🦉","🐙","🦄","🐧","🐨","🦋","🐳","🐰","🦔","🐢","🦦","🐝"];
+const anonTag = (uid, ideaId) => cyrb53(uid+":"+ideaId).toString(36);
+const anonFace = tag => ANIMALS[cyrb53(tag) % ANIMALS.length];
+const anonNo = tag => (cyrb53(tag,3) % 900) + 100;
 
-async function persist(key, field, value, shared, toastMsg){
-  state[field] = value;
-  await saveJSON(key, field==="settings" ? value : {[field]: value}, shared);
-  render();
-  if(toastMsg) showToast(toastMsg);
+/* =====================================================================
+   Anti-cyberbullying filter
+   ===================================================================== */
+const BAD_TH = [/เหี้ย/, /สัส(?!ดี)/, /ควย/, /เย็ด/, /แม่ง(?!าน)/, /ไอ้สัตว์|อีสัตว์/, /ชาติหมา/, /ส้นตีน/, /ตอแหล/, /กะหรี่/, /ระยำ/,
+  /ไปตาย|ตายซะ|ตายไปเลย/, /เสือก/, /อีดอก/, /ไอ้ควาย|อีควาย/, /ปัญญาอ่อน/, /ห่ากิน/, /อีร่าน/];
+const BAD_EN = ["fuck","shit","bitch","asshole","bastard","motherfucker","cunt"];
+function normText(t){
+  return String(t).toLowerCase().replace(/[​-‍﻿]/g,"").replace(/[\s.\-_*•·,'"`~|\\\/]+/g,"")
+    .replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e").replace(/4/g,"a").replace(/5/g,"s").replace(/@/g,"a").replace(/\$/g,"s");
 }
-
-/* ---------------- toast ---------------- */
-let toastTimer = null;
-function showToast(msg){
-  let t = document.getElementById("toast");
-  if(!t){
-    t = document.createElement("div");
-    t.id = "toast";
-    t.className = "toast";
-    document.body.appendChild(t);
+const TITLES = "นางสาว|นาง|นาย|น\\.ส\\.|ด\\.ช\\.|ด\\.ญ\\.|เด็กชาย|เด็กหญิง|คุณครู|ครู|อาจารย์|อ\\.|ผอ\\.|ผู้อำนวยการ|รองผู้อำนวยการ|พี่|น้อง|คุณ";
+const NAME_RE = new RegExp(`(${TITLES})\\s*([ก-๙]{2,14})`, "g");
+const NAME_STOP = ["บาง","ทุก","ที่","ท่าน","พละ","ประจำ","หลาย","คน","ใน","ของ","เรา","ผู้","วิชา","ชั้น","หัวหน้า","แต่ละ","เหล่า","ทั้ง","บางท่าน","ใหญ่","เก่า","ใหม่","ๆ","ที","คนอื่น","สอน","ไม่","ควร","ต้อง","ได้","มี","เป็น","และ","หรือ","เวร","ดูแล","ผู้ปกครอง","นักเรียน","ม.","มัธยม","ประถม","ภาษา","คณิต","วิทย์","สังคม","ศิลปะ","ดนตรี","สุขศึกษา","แนะแนว","ห้อง","รุ่น"];
+const NAME_EN = /\b(?:Mr|Mrs|Ms|Miss|Teacher|Ajarn|Khru|Kru)\.?\s+[A-Z][a-z]{2,}/g;
+function checkText(...parts){
+  const raw = parts.join("\n");
+  const n = normText(raw);
+  let bad = BAD_TH.some(re=>re.test(n)) || BAD_EN.some(w=>n.includes(w));
+  const names = [];
+  for(const m of raw.matchAll(NAME_RE)){
+    const nm = m[2];
+    if(NAME_STOP.some(s=>nm.startsWith(s))) continue;
+    names.push((m[1]+" "+nm).replace(/\s+/g," "));
   }
-  t.innerHTML = `<span class="toast-icon">${ICONS.check}</span><span>${esc(msg)}</span>`;
-  // force reflow so the show class re-triggers the transition every time
-  t.classList.remove("show");
-  void t.offsetWidth;
-  t.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ t.classList.remove("show"); }, 2400);
+  for(const m of raw.matchAll(NAME_EN)) names.push(m[0]);
+  return { bad, names:[...new Set(names)] };
 }
 
-/* ---------------- actions ---------------- */
-async function addPost(){
-  const text = state.draft.postText.trim();
-  if(!text) return;
-  const name = state.draft.postName.trim();
-  const post = { id:uid(), text, name, category:state.draft.postCat, likes:0, ts:Date.now() };
-  state.draft.postText = ""; state.draft.postName = "";
-  await persist("posts-data","posts",[post, ...state.posts], true, "ส่งความเห็นสำเร็จ");
-  state.mine.myPosts.push(post.id); await saveJSON("my-interactions",state.mine,false);
+/* word diff for edit history */
+function tokens(s){
+  try{ if(Intl.Segmenter) return [...new Intl.Segmenter("th",{granularity:"word"}).segment(s)].map(x=>x.segment); }catch{}
+  return [...s];
 }
-async function likePost(id){
-  if(state.mine.likedPosts.includes(id)) return;
-  const next = state.posts.map(p=>p.id===id?{...p,likes:p.likes+1}:p);
-  state.posts = next; await saveJSON("posts-data",{posts:next},true);
-  state.mine.likedPosts.push(id); await saveJSON("my-interactions",state.mine,false);
-  render();
-}
-async function deletePost(id){
-  await persist("posts-data","posts", state.posts.filter(p=>p.id!==id), true, "ลบความเห็นสำเร็จ");
-}
-async function addWish(){
-  const text = state.draft.wishText.trim();
-  if(!text) return;
-  state.draft.wishText = "";
-  await persist("wishes-data","wishes",[{id:uid(),text,ts:Date.now()}, ...state.wishes], true, "ส่งไอเดียสำเร็จ");
-}
-async function deleteWish(id){
-  await persist("wishes-data","wishes", state.wishes.filter(w=>w.id!==id), true, "ลบไอเดียสำเร็จ");
-}
-async function toggleWishOpen(){
-  const next = {...state.settings, wishOpen: !state.settings.wishOpen};
-  await persist("settings-data","settings", next, true, next.wishOpen ? "เปิดรับไอเดียแล้ว" : "ปิดรับไอเดียแล้ว");
-}
-async function updateDeadline(val){
-  const next = {...state.settings, wishDeadline: val || null};
-  await persist("settings-data","settings", next, true);
-}
-async function addPoll(){
-  const title = state.draft.pollTitle.trim();
-  const opts = state.draft.pollOpts.map(o=>o.trim()).filter(Boolean);
-  if(!title || opts.length<2) return;
-  const poll = { id:uid(), title, options:opts.map(t=>({id:uid(),text:t,votes:0})), status:"active", ts:Date.now(), feedback:[] };
-  state.draft.pollTitle=""; state.draft.pollOpts=["",""];
-  await persist("polls-data","polls",[poll, ...state.polls], true, "เปิดโหวตสำเร็จ");
-}
-async function vote(pollId, optId){
-  if(state.mine.votedPolls.includes(pollId)) return;
-  const next = state.polls.map(p=>p.id===pollId?{...p,options:p.options.map(o=>o.id===optId?{...o,votes:o.votes+1}:o)}:p);
-  state.polls=next; await saveJSON("polls-data",{polls:next},true);
-  state.mine.votedPolls.push(pollId); await saveJSON("my-interactions",state.mine,false);
-  render();
-  showToast("โหวตสำเร็จ");
-}
-async function endPoll(id){
-  await persist("polls-data","polls", state.polls.map(p=>p.id===id?{...p,status:"ended"}:p), true, "จบกิจกรรมสำเร็จ");
-}
-async function deletePoll(id){
-  await persist("polls-data","polls", state.polls.filter(p=>p.id!==id), true, "ลบกิจกรรมโหวตสำเร็จ");
-}
-async function submitFeedback(pollId, rating, comment){
-  if(state.mine.ratedPolls.includes(pollId) || rating<1) return;
-  const next = state.polls.map(p=>p.id===pollId?{...p,feedback:[...p.feedback,{rating,comment:comment.trim(),ts:Date.now()}]}:p);
-  state.polls=next; await saveJSON("polls-data",{polls:next},true);
-  state.mine.ratedPolls.push(pollId); await saveJSON("my-interactions",state.mine,false);
-  render();
-  showToast("ส่งคะแนนสำเร็จ");
-}
-function tryUnlock(){
-  if(state.draft.pinInput === state.settings.councilPin){
-    state.isCouncil=true; state.draft.pinError=""; state.draft.pinInput="";
-    render();
-    showToast("เข้าสู่ระบบสำเร็จ");
-  } else { state.draft.pinError = "รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง"; render(); }
-}
-function setTab(t){ state.tab=t; render(); }
-function bind(id, evt, handler){ const el=document.getElementById(id); if(el) el.addEventListener(evt, handler); }
-
-/* ---------------- render pieces ---------------- */
-function heroNet(){
-  let els="";
-  const pts=[[20,30],[90,20],[160,60],[230,15],[40,90],[130,110],[210,95],[70,140],[190,150]];
-  for(let i=0;i<pts.length-1;i++){ els += `<line x1="${pts[i][0]}" y1="${pts[i][1]}" x2="${pts[i+1][0]}" y2="${pts[i+1][1]}" stroke="#fff" stroke-width="1"/>`; }
-  pts.forEach(p=>{ els += `<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#fff"/>`; });
-  return `<svg class="hero-net" viewBox="0 0 260 170" preserveAspectRatio="none">${els}</svg>`;
+function diffHTML(a, b){
+  const A=tokens(a), B=tokens(b), n=A.length, m=B.length;
+  if(n*m>300000) return { a:esc(a), b:esc(b) };
+  const dp=new Uint16Array((n+1)*(m+1)), W=m+1;
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--)
+    dp[i*W+j] = A[i]===B[j] ? dp[(i+1)*W+j+1]+1 : Math.max(dp[(i+1)*W+j], dp[i*W+j+1]);
+  let i=0,j=0; const ra=[], rb=[];
+  const push=(arr,t,k)=>{ if(arr.length && arr[arr.length-1].k===k) arr[arr.length-1].t+=t; else arr.push({t,k}); };
+  while(i<n && j<m){
+    if(A[i]===B[j]){ push(ra,A[i],0); push(rb,B[j],0); i++; j++; }
+    else if(dp[(i+1)*W+j] >= dp[i*W+j+1]){ push(ra,A[i++],1); }
+    else { push(rb,B[j++],1); }
+  }
+  while(i<n) push(ra,A[i++],1); while(j<m) push(rb,B[j++],1);
+  const out=(arr,cls)=>arr.map(x=>x.k?`<mark class="${cls}">${esc(x.t)}</mark>`:esc(x.t)).join("");
+  return { a:out(ra,"del"), b:out(rb,"add") };
 }
 
-function renderHero(){
-  const total = state.posts.length, wishes = state.wishes.length, activePolls = state.polls.filter(p=>p.status==="active").length;
+/* rounds */
+const ROUND_MS = CFG.ROUND_DAYS * 864e5;
+function roundInfo(now=Date.now()){
+  const id = Math.floor((now - CFG.ROUND_EPOCH)/ROUND_MS);
+  const start = CFG.ROUND_EPOCH + id*ROUND_MS;
+  return { id, start, end:start+ROUND_MS };
+}
+function leftText(end){
+  const ms=Math.max(0,end-Date.now()); const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5);
+  return d>0 ? `${d} วัน ${h} ชม.` : `${h} ชม.`;
+}
+
+/* =====================================================================
+   icons
+   ===================================================================== */
+const I = {
+  feed:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.3 1 2.5h6c0-1.2.4-1.9 1-2.5A6 6 0 0 0 12 3Z"/>',
+  poll:'<path d="m9 12 2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="3"/>',
+  event:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+  shield:'<path d="M12 3 4 6v5c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-3Z"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z"/>',
+  up:'<path d="M12 19V6M6 12l6-6 6 6"/>',
+  chat:'<path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4A8 8 0 1 1 20 12Z"/>',
+  share:'<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', x:'<path d="m6 6 12 12M18 6 6 18"/>',
+  copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/>',
+  lock:'<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  check:'<path d="m5 12 5 5 9-9"/>', clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  star:'<path d="m12 3 2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.1 6.1-.6L12 3Z"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>', trash:'<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/>',
+  logout:'<path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M16 8l4 4-4 4M20 12H9"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  send:'<path d="m3 11 18-8-8 18-2.5-7L3 11Z"/>',
+};
+const ic = (n,cls="") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]||""}</svg>`;
+
+/* =====================================================================
+   state
+   ===================================================================== */
+const S = {
+  uid:null, tab:"feed", sort:"top", cat:"all", q:"", mine:false,
+  ideas:[], prev:null, polls:[], events:[], settings:{}, me:{ upvoted:{}, votedPolls:{}, rated:{}, quota:{} },
+  loaded:{}, online:true, modal:null, comments:[], council:false, cview:"overview", pollView:"donut", rankView:"cur",
+  codes: LS.get("bb_codes",{}),
+  draft:{ pollTitle:"", pollDesc:"", pollOpts:["",""], evName:"", evDate:"", evDesc:"", stars:{}, tags:{}, pin:"", pinErr:"", rewards:null, newPin:"", compose:{title:"",text:"",cat:"study"} },
+  dirty:false, lastComment:0,
+};
+try{ S.council = sessionStorage.getItem("bb_council")==="1"; }catch{}
+let db, auth, unsubs = [], commentsUnsub = null, activeRound = roundInfo().id;
+
+/* =====================================================================
+   UI plumbing
+   ===================================================================== */
+let toastT;
+function toast(msg, bad=false){
+  const t=$("#toast"); t.className = bad ? "bad" : ""; t.innerHTML = `${ic(bad?"info":"check")}<span>${esc(msg)}</span>`;
+  void t.offsetWidth; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2600);
+}
+function fail(e){
+  console.error(e);
+  const m = String(e?.code||e?.message||e);
+  if(m.includes("permission")) toast("ไม่มีสิทธิ์ทำรายการ — ตรวจสอบ Firestore Rules", true);
+  else if(m.includes("unavailable")||m.includes("offline")) toast("เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง", true);
+  else toast("เกิดข้อผิดพลาด ลองใหม่อีกครั้ง", true);
+}
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }catch{}
+  try{ const a=document.createElement("textarea"); a.value=t; a.style.position="fixed"; a.style.opacity="0"; document.body.appendChild(a); a.select(); const ok=document.execCommand("copy"); a.remove(); return ok; }catch{ return false; }
+}
+const TABS = [["feed","ไอเดีย","feed"],["polls","ประชามติ","poll"],["events","ประเมินงาน","event"],["rank","อันดับ","trophy"],["council","สภา","shield"]];
+function buildNav(){
+  $("#dnav").innerHTML = TABS.map(([k,l,i])=>`<button data-action="tab" data-tab="${k}" ${S.tab===k?'aria-current="page"':''} class="${S.tab===k?"active":""}">${ic(i)}${l}</button>`).join("");
+  $("#bnav").innerHTML = TABS.map(([k,l,i])=>`<button data-action="tab" data-tab="${k}" class="${S.tab===k?"active":""}">${ic(i)}<span>${l}</span></button>`).join("");
+  $("#themeBtn").innerHTML = ic(document.documentElement.dataset.theme==="dark"?"sun":"moon");
+}
+function setTab(t){
+  S.tab=t; buildNav(); renderView(); window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* modal layers */
+function lockBody(){ document.body.classList.toggle("lock", !!($("#modal-root").innerHTML || $("#modal-root2").innerHTML)); }
+function showModal(html, wide=false){
+  $("#modal-root").innerHTML = `<div class="ov" data-action="ovclose"><div class="sheet ${wide?"wide":""}" role="dialog" aria-modal="true">${html}</div></div>`;
+  lockBody();
+}
+function closeModal(){
+  if(commentsUnsub){ commentsUnsub(); commentsUnsub=null; }
+  S.modal=null; S.comments=[]; $("#modal-root").innerHTML=""; lockBody();
+}
+function ask({title, body, ok="ตกลง", cancel="ยกเลิก", danger=false}){
+  return new Promise(res=>{
+    const root=$("#modal-root2");
+    root.innerHTML = `<div class="ov l2"><div class="sheet" role="alertdialog" aria-modal="true">
+      <h2 class="disp" style="font-size:20px;margin-bottom:8px;">${esc(title)}</h2>
+      <div class="body-txt" style="margin-bottom:18px;">${body}</div>
+      <div class="row" style="justify-content:flex-end;">
+        <button class="btn line" id="askNo">${esc(cancel)}</button>
+        <button class="btn ${danger?"danger":"primary"}" id="askYes">${esc(ok)}</button></div></div></div>`;
+    lockBody();
+    const done=v=>{ root.innerHTML=""; lockBody(); res(v); };
+    $("#askNo").onclick=()=>done(false); $("#askYes").onclick=()=>done(true);
+    $("#askYes").focus();
+  });
+}
+/* ผ่านตัวกรองหรือไม่ — true = โพสต์ต่อได้ */
+async function passFilter(...parts){
+  const r = checkText(...parts);
+  if(r.bad){ toast("พบคำที่ไม่เหมาะสม โปรดปรับถ้อยคำให้สุภาพก่อนส่ง", true); return false; }
+  if(r.names.length){
+    return ask({ title:"พบข้อความที่คล้ายชื่อบุคคล",
+      body:`<p>เพื่อป้องกันการกลั่นแกล้ง ระบบพบข้อความที่อาจเป็นชื่อจริง: <b>${r.names.map(esc).join(", ")}</b></p>
+            <p class="muted" style="margin-top:6px;">แนะนำให้เปลี่ยนเป็นตำแหน่ง/วิชา/กลุ่ม เช่น “ครูวิชาคณิต” แทนชื่อ ถ้าไม่ใช่ชื่อคน สามารถส่งต่อได้</p>`,
+      ok:"ไม่ใช่ชื่อคน ส่งต่อ", cancel:"กลับไปแก้ไข" });
+  }
+  return true;
+}
+
+/* =====================================================================
+   data
+   ===================================================================== */
+function subscribeIdeas(){
+  unsubs.filter(u=>u.k==="ideas").forEach(u=>u.f()); unsubs = unsubs.filter(u=>u.k!=="ideas");
+  const f = onSnapshot(query(collection(db,"ideas"), where("round","==",activeRound)), snap=>{
+    S.ideas = snap.docs.map(d=>({id:d.id,...d.data()})); S.loaded.ideas=true; patchModalIdea(); refresh();
+  }, e=>{ S.loaded.ideas=true; fail(e); refresh(); });
+  unsubs.push({k:"ideas",f});
+}
+function subscribeAll(){
+  subscribeIdeas();
+  unsubs.push({k:"polls", f:onSnapshot(collection(db,"polls"), snap=>{
+    S.polls = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0)); S.loaded.polls=true; refresh();
+  }, e=>{ S.loaded.polls=true; fail(e); })});
+  unsubs.push({k:"events", f:onSnapshot(collection(db,"events"), snap=>{
+    S.events = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0)); S.loaded.events=true; refresh();
+  }, e=>{ S.loaded.events=true; fail(e); })});
+  unsubs.push({k:"settings", f:onSnapshot(doc(db,"settings","main"), snap=>{
+    S.settings = snap.exists()?snap.data():{}; refresh();
+  }, ()=>{})});
+  unsubs.push({k:"me", f:onSnapshot(doc(db,"users",S.uid), snap=>{
+    const d = snap.exists()?snap.data():{};
+    S.me = { upvoted:d.upvoted||{}, votedPolls:d.votedPolls||{}, rated:d.rated||{}, quota:d.quota||{} }; S.loaded.me=true; refresh();
+  }, ()=>{ S.loaded.me=true; })});
+}
+const getIdea = id => S.ideas.find(i=>i.id===id) || (S.prev||[]).find(i=>i.id===id) || (S.modal && S.modal.idea && S.modal.idea.id===id ? S.modal.idea : null);
+const visible = () => S.ideas.filter(i=>!i.hidden);
+const quotaUsed = () => !!(S.me.quota[activeRound] || LS.get("bb_posted",null)===activeRound);
+const isMine = id => !!S.codes[id];
+function rankedTop(list){ return [...list].filter(i=>!i.hidden).sort((a,b)=>(b.votes||0)-(a.votes||0)||(a.ts||0)-(b.ts||0)); }
+function trendScore(i){ const h=(Date.now()-i.ts)/36e5; return ((i.votes||0)+1+(i.comments||0)*.5)/Math.pow(h+2,1.4); }
+function sortIdeas(list, mode){
+  const a=[...list];
+  if(mode==="latest") return a.sort((x,y)=>y.ts-x.ts);
+  if(mode==="trending") return a.sort((x,y)=>trendScore(y)-trendScore(x));
+  return a.sort((x,y)=>(y.votes||0)-(x.votes||0)||x.ts-y.ts);
+}
+const pollTotal = p => Object.values(p.counts||{}).reduce((a,b)=>a+(b||0),0);
+const evAvg = (ev,ph) => { const s=ev.stats?.[ph]; return s&&s.n ? s.sum/s.n : null; };
+
+/* =====================================================================
+   actions
+   ===================================================================== */
+async function toggleUpvote(id){
+  if(!S.uid) return;
+  const ref=doc(db,"ideas",id), vref=doc(db,"ideas",id,"votes",S.uid), uref=doc(db,"users",S.uid);
+  const had = !!S.me.upvoted[id];
+  // optimistic
+  const i=getIdea(id); if(i){ i.votes=(i.votes||0)+(had?-1:1); }
+  if(had) delete S.me.upvoted[id]; else S.me.upvoted[id]=true;
+  refresh(); patchModalIdea();
+  try{
+    await runTransaction(db, async tx=>{
+      const v = await tx.get(vref);
+      if(v.exists()){ tx.delete(vref); tx.update(ref,{votes:increment(-1)}); tx.set(uref,{upvoted:{[id]:deleteField()}},{merge:true}); }
+      else { tx.set(vref,{ts:Date.now()}); tx.update(ref,{votes:increment(1)}); tx.set(uref,{upvoted:{[id]:true}},{merge:true}); }
+    });
+  }catch(e){ fail(e); }
+}
+async function shareIdea(id){
+  const i=getIdea(id); const url = location.href.split("#")[0]+"#idea="+id;
+  if(navigator.share){
+    try{ await navigator.share({ title:"BB RIGHT — "+(i?.title||"ไอเดีย"), text:i?.title||"", url }); return; }
+    catch(e){ if(e && e.name==="AbortError") return; }
+  }
+  toast((await copyText(url)) ? "คัดลอกลิงก์แล้ว" : "คัดลอกไม่สำเร็จ", false);
+}
+async function submitIdea(form){
+  const d=S.draft.compose;
+  const title=d.title.trim(), text=d.text.trim();
+  const err=$("#cErr"); err.textContent="";
+  if(quotaUsed()){ err.textContent="คุณส่งข้อเสนอในรอบนี้ไปแล้ว (1 คน ส่งได้ 1 ข้อเสนอต่อรอบ)"; return; }
+  if(title.length<4){ err.textContent="หัวข้อสั้นเกินไป (อย่างน้อย 4 ตัวอักษร)"; return; }
+  if(text.length<15){ err.textContent="ช่วยอธิบายเพิ่มอีกนิด (อย่างน้อย 15 ตัวอักษร)"; return; }
+  if(!(await passFilter(title,text))) return;
+  const btn=$("#cBtn"); btn.disabled=true;
+  try{
+    const ideaRef=doc(collection(db,"ideas")), id=ideaRef.id, code=genCode(), ch=await codeHash(id,code);
+    const qref=doc(db,"quotas",`${activeRound}_${S.uid}`), uref=doc(db,"users",S.uid);
+    await runTransaction(db, async tx=>{
+      const q=await tx.get(qref); if(q.exists()) throw new Error("QUOTA");
+      tx.set(qref,{ideaId:id,ts:Date.now()});
+      tx.set(ideaRef,{ title, text, cat:d.cat, votes:0, comments:0, round:activeRound, ts:Date.now(), history:[], ch, a:anonTag(S.uid,id) });
+      tx.set(uref,{quota:{[activeRound]:id}},{merge:true});
+    });
+    S.codes[id]=code; LS.set("bb_codes",S.codes); LS.set("bb_posted",activeRound);
+    S.me.quota[activeRound]=id; S.draft.compose={title:"",text:"",cat:"study"};
+    openCodeModal(id, code); refresh();
+  }catch(e){
+    if(String(e.message).includes("QUOTA")){ LS.set("bb_posted",activeRound); err.textContent="คุณส่งข้อเสนอในรอบนี้ไปแล้ว"; refresh(); }
+    else fail(e);
+    btn.disabled=false;
+  }
+}
+async function submitEdit(form){
+  const id=S.modal.id, i=getIdea(id); if(!i) return;
+  const code=$("#eCode").value, title=$("#eTitle").value.trim(), text=$("#eText").value.trim(), err=$("#eErr"); err.textContent="";
+  if(Date.now()-i.ts > CFG.EDIT_MIN*60000){ err.textContent="เลยเวลาแก้ไข 30 นาทีแล้ว"; return; }
+  if(title.length<4||text.length<15){ err.textContent="กรอกหัวข้อ (≥4 ตัวอักษร) และรายละเอียด (≥15 ตัวอักษร)"; return; }
+  if((await codeHash(id,code)) !== i.ch){ err.textContent="Secret Code ไม่ถูกต้อง"; return; }
+  if(title===i.title && text===i.text){ err.textContent="ยังไม่มีการเปลี่ยนแปลง"; return; }
+  if(!(await passFilter(title,text))) return;
+  try{
+    const history=[...(i.history||[]),{title:i.title,text:i.text,ts:i.editedAt||i.ts}];
+    await updateDoc(doc(db,"ideas",id),{title,text,history,editedAt:Date.now()});
+    S.codes[id]=normCode(code)?code:S.codes[id]; LS.set("bb_codes",S.codes);
+    toast("แก้ไขเรียบร้อย ✏️"); openDetail(id);
+  }catch(e){ fail(e); }
+}
+async function submitComment(form){
+  const id=S.modal.id, inp=$("#cmText"), text=inp.value.trim();
+  if(text.length<2) return;
+  if(Date.now()-S.lastComment<15000){ toast("รอสักครู่ก่อนคอมเมนต์ถัดไป", true); return; }
+  if(!(await passFilter(text))) return;
+  try{
+    const b=writeBatch(db), cref=doc(collection(db,"ideas",id,"comments"));
+    b.set(cref,{text,ts:Date.now(),a:anonTag(S.uid,id)}); b.update(doc(db,"ideas",id),{comments:increment(1)});
+    await b.commit(); inp.value=""; S.lastComment=Date.now();
+  }catch(e){ fail(e); }
+}
+async function deleteComment(cid){
+  if(!S.council) return;
+  if(!(await ask({title:"ลบคอมเมนต์นี้?",body:"การลบไม่สามารถย้อนกลับได้",ok:"ลบ",danger:true}))) return;
+  try{ const b=writeBatch(db); b.delete(doc(db,"ideas",S.modal.id,"comments",cid)); b.update(doc(db,"ideas",S.modal.id),{comments:increment(-1)}); await b.commit(); }catch(e){ fail(e); }
+}
+async function claimReward(form){
+  const id=S.modal.id, i=getIdea(id), err=$("#clErr"); err.textContent="";
+  if((await codeHash(id,$("#clCode").value)) !== i.ch){ err.textContent="Claim Key ไม่ถูกต้อง"; return; }
+  try{
+    if(!i.claimedAt) await updateDoc(doc(db,"ideas",id),{claimedAt:Date.now()});
+    const rk=S.modal.rank; showVoucher(i, rk, i.claimedAt||Date.now());
+  }catch(e){ fail(e); }
+}
+async function votePoll(pid, oid){
+  const p=S.polls.find(x=>x.id===pid); if(!p||S.me.votedPolls[pid]) return;
+  const pref=doc(db,"polls",pid), vref=doc(db,"polls",pid,"votes",S.uid), uref=doc(db,"users",S.uid);
+  try{
+    await runTransaction(db, async tx=>{
+      const v=await tx.get(vref); if(v.exists()) throw new Error("DUP");
+      tx.set(vref,{opt:oid,ts:Date.now()});
+      tx.update(pref,{[`counts.${oid}`]:increment(1)});
+      tx.set(uref,{votedPolls:{[pid]:oid}},{merge:true});
+    });
+    S.me.votedPolls[pid]=oid; toast("โหวตเรียบร้อย ขอบคุณที่ร่วมแสดงความเห็น"); refresh();
+  }catch(e){ if(String(e.message).includes("DUP")) toast("คุณโหวตเรื่องนี้ไปแล้ว",true); else fail(e); }
+}
+async function submitRating(evId, phase){
+  const key=`${evId}_${phase}`, stars=S.draft.stars[key]||0;
+  if(S.me.rated[key]) return;
+  if(!stars){ toast("กรุณาเลือกจำนวนดาวก่อน",true); return; }
+  const comment=($(`#evc-${key}`)?.value||"").trim(), tags=Object.keys(S.draft.tags[key]||{}).filter(k=>S.draft.tags[key][k]);
+  if(comment && !(await passFilter(comment))) return;
+  try{
+    const eref=doc(db,"events",evId), rref=doc(db,"events",evId,"responses",`${S.uid}_${phase}`), uref=doc(db,"users",S.uid);
+    await runTransaction(db, async tx=>{
+      const ex=await tx.get(rref); if(ex.exists()) throw new Error("DUP");
+      tx.set(rref,{phase,stars,comment,tags,ts:Date.now()});
+      const upd={[`stats.${phase}.n`]:increment(1),[`stats.${phase}.sum`]:increment(stars),[`stats.${phase}.s${stars}`]:increment(1)};
+      tags.forEach(t=>{ upd[`tagc.${phase}_${t}`]=increment(1); });
+      tx.update(eref,upd); tx.set(uref,{rated:{[key]:true}},{merge:true});
+    });
+    S.me.rated[key]=true; toast("ส่งความพึงพอใจแล้ว ขอบคุณมาก 💛"); refresh();
+  }catch(e){ if(String(e.message).includes("DUP")) toast("คุณประเมินช่วงนี้ไปแล้ว",true); else fail(e); }
+}
+
+/* council */
+async function councilLogin(){
+  const pin=S.draft.pin; const h=await sha256("bbright-council:"+pin);
+  const target = S.settings.councilPinHash || await sha256("bbright-council:"+CFG.DEFAULT_PIN);
+  if(h===target){ S.council=true; try{sessionStorage.setItem("bb_council","1");}catch{} S.draft.pin=""; S.draft.pinErr=""; toast("เข้าสู่โหมดสภานักเรียนแล้ว"); }
+  else S.draft.pinErr="รหัสไม่ถูกต้อง ลองใหม่อีกครั้ง";
+  renderView();
+}
+function councilLogout(){ S.council=false; try{sessionStorage.removeItem("bb_council");}catch{} renderView(); }
+async function createPoll(){
+  const title=S.draft.pollTitle.trim(), opts=S.draft.pollOpts.map(o=>o.trim()).filter(Boolean);
+  if(!title||opts.length<2){ toast("ใส่หัวข้อและตัวเลือกอย่างน้อย 2 ข้อ",true); return; }
+  const options=opts.map((t,i)=>({id:"o"+(i+1),text:t})), counts={}; options.forEach(o=>counts[o.id]=0);
+  try{
+    await setDoc(doc(collection(db,"polls")),{title,desc:S.draft.pollDesc.trim(),options,counts,status:"active",ts:Date.now()});
+    S.draft.pollTitle="";S.draft.pollDesc="";S.draft.pollOpts=["",""]; toast("เปิดประชามติแล้ว"); renderView();
+  }catch(e){ fail(e); }
+}
+async function createEvent(){
+  const name=S.draft.evName.trim(); if(!name){ toast("ใส่ชื่อกิจกรรมก่อน",true); return; }
+  try{
+    await setDoc(doc(collection(db,"events")),{name,desc:S.draft.evDesc.trim(),date:S.draft.evDate||null,phase:"before",ts:Date.now(),stats:{},tagc:{}});
+    S.draft.evName="";S.draft.evDesc="";S.draft.evDate=""; toast("สร้างแบบประเมินกิจกรรมแล้ว"); renderView();
+  }catch(e){ fail(e); }
+}
+const upd = (col,id,data,msg)=>updateDoc(doc(db,col,id),data).then(()=>msg&&toast(msg)).catch(fail);
+async function savePin(){
+  const v=S.draft.newPin.trim(); if(v.length<4){ toast("รหัสใหม่ต้องมีอย่างน้อย 4 ตัว",true); return; }
+  try{ await setDoc(doc(db,"settings","main"),{councilPinHash:await sha256("bbright-council:"+v)},{merge:true}); S.draft.newPin=""; toast("เปลี่ยนรหัสสภาแล้ว"); renderView(); }catch(e){ fail(e); }
+}
+async function saveRewards(){
+  try{ await setDoc(doc(db,"settings","main"),{rewardsText:(S.draft.rewards??"").trim()},{merge:true}); toast("บันทึกข้อความรางวัลแล้ว"); }catch(e){ fail(e); }
+}
+
+/* =====================================================================
+   views
+   ===================================================================== */
+function heroStats(){
+  const r=roundInfo(), list=visible();
+  return { ideas:list.length, votes:list.reduce((a,i)=>a+(i.votes||0),0), left:leftText(r.end) };
+}
+function quotaChip(){
+  return quotaUsed()
+    ? `<span class="chip hero-chip">${ic("check")} ส่งข้อเสนอรอบนี้แล้ว</span>`
+    : `<span class="chip hero-chip">${ic("plus")} ยังส่งได้ 1 ข้อเสนอ</span>`;
+}
+function rulesList(){
+  return `<ul class="rules">
+    <li><span class="em">🕶️</span><span><b>ไม่ระบุตัวตน 100%</b> ไม่ต้องสมัครด้วยชื่อจริง ใช้ Secret Code ที่ได้ตอนโพสต์เพื่อแก้ไขหรือรับรางวัล</span></li>
+    <li><span class="em">1️⃣</span><span><b>1 คน 1 ข้อเสนอ ต่อรอบ</b> รอบละ 2 สัปดาห์ แล้วบอร์ดจะเริ่มรอบใหม่</span></li>
+    <li><span class="em">✏️</span><span><b>แก้ไขได้ 30 นาที</b> หลังโพสต์ ใส่ Secret Code ยืนยัน และมีประวัติการแก้ไขให้ทุกคนดู</span></li>
+    <li><span class="em">🛡️</span><span><b>พูดสุภาพ ไม่กล่าวหาตัวบุคคล</b> ระบบกรองคำหยาบและเตือนเมื่อพบชื่อจริง</span></li>
+  </ul>`;
+}
+function feedView(){
+  const r=roundInfo(), hs=heroStats();
   return `
-  <div class="hero">
-    ${heroNet()}
-    <div class="hero-top">
-      <div class="badge">${ICONS.logo}</div>
-      <div>
-        <div class="hero-title"><span class="hl">BB</span> RIGHT</div>
-        <div class="hero-sub">พื้นที่บอกเล่า ฟังเสียงจริง เปลี่ยนแปลงได้จริง</div>
+  <section class="hero">
+    <div>
+      <span class="chip hero-chip">${ic("clock")} รอบที่ ${r.id+1} · ${fmtDate(r.start)} – ${fmtDate(r.end-1)}</span>
+      <h1 style="margin-top:12px;">เสียงของทุกคน<span>เปลี่ยนโรงเรียนได้จริง</span></h1>
+      <p>พื้นที่ปลอดภัยแบบไม่ระบุตัวตน เสนอไอเดีย กดโหวต และดูว่าเพื่อน ๆ คิดอะไร ข้อเสนอที่ได้ใจที่สุดจะถูกส่งต่อให้สภานักเรียน</p>
+      <div class="hero-actions">
+        <button class="btn primary" data-action="compose">${ic("plus")} เสนอไอเดีย</button>
+        <button class="btn glass" data-action="rules">${ic("info")} กติกา</button>
+        <span id="quotaChip">${quotaChip()}</span>
       </div>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><b>${total}</b><span>ความเห็นทั้งหมด</span></div>
-      <div class="hero-stat"><b>${wishes}</b><span>ไอเดียใน Gather Wish</span></div>
-      <div class="hero-stat"><b>${activePolls}</b><span>โหวตที่เปิดอยู่</span></div>
+      <div class="hstat"><b id="hs-ideas">${hs.ideas}</b><span>ไอเดียรอบนี้</span></div>
+      <div class="hstat"><b id="hs-votes">${hs.votes}</b><span>โหวตรวม</span></div>
+      <div class="hstat"><b id="hs-left" style="font-size:19px;padding:4px 0;">${hs.left}</b><span>เหลือในรอบนี้</span></div>
     </div>
-  </div>`;
-}
-
-function trendBars(posts){
-  const counts = CATEGORIES.map(c=>({...c, count: posts.filter(p=>p.category===c.name).length}));
-  const max = Math.max(1, ...counts.map(c=>c.count));
-  return counts.map(c=>`
-    <div class="bar-row">
-      <div class="bar-label">${esc(c.name)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(c.count/max)*100}%;background:${c.color}"></div></div>
-      <div class="bar-val">${c.count}</div>
-    </div>`).join("");
-}
-
-function renderFeedPostsList(posts){
-  const filterCat = state.draft.feedFilterCat;
-  const q = state.draft.feedSearchText.trim().toLowerCase();
-  const filtered = posts.filter(p =>
-    (filterCat==="all" || (filterCat==="mine" ? state.mine.myPosts.includes(p.id) : p.category===filterCat)) &&
-    (!q || p.text.toLowerCase().includes(q))
-  );
-  if(posts.length===0) return `<div class="empty">ยังไม่มีใครพูดอะไร เป็นคนแรกที่เริ่มบทสนทนาสิ</div>`;
-  if(filtered.length===0) return `<div class="empty">${filterCat==="mine" ? "คุณยังไม่เคยส่งความเห็น" : "ไม่พบความคิดเห็นที่ตรงกับหมวดหมู่หรือคำค้นหา"}</div>`;
-  return filtered.map(p=>`
-      <div class="post">
-        <div class="row">
-          <span class="tag" style="background:${catColor(p.category)}1a;color:${catColor(p.category)}"><span class="dot" style="background:${catColor(p.category)}"></span>${esc(p.category)}</span>
-          ${state.isCouncil ? `<button class="btn-ghost" onclick="deletePost('${p.id}')">${ICONS.trash}</button>` : ""}
+  </section>
+  <div class="layout">
+    <div>
+      <div class="controls">
+        <div class="seg" role="tablist" aria-label="เรียงลำดับ">
+          ${[["top","🏆 Top Voted"],["latest","🆕 Latest"],["trending","🔥 Trending"]].map(([k,l])=>`<button role="tab" aria-selected="${S.sort===k}" class="${S.sort===k?"active":""}" data-action="sort" data-v="${k}">${l}</button>`).join("")}
         </div>
-        ${p.name ? `<div style="font-size:12.5px;font-weight:600;color:var(--navy);margin-top:6px;">${esc(p.name)}</div>` : ""}
-        <div class="post-text">${esc(p.text)}</div>
-        <div class="post-foot">
-          <span class="time">${timeAgo(p.ts)}</span>
-          <button class="like ${state.mine.likedPosts.includes(p.id)?"liked":""}" ${state.mine.likedPosts.includes(p.id)?"disabled":""} onclick="likePost('${p.id}')">
-            ${state.mine.likedPosts.includes(p.id)?ICONS.heartFill:ICONS.heart} ${p.likes}
-          </button>
-        </div>
-      </div>`).join("");
+        <label class="search"><span class="sr">ค้นหา</span>${ic("search")}<input id="feedQ" class="field" type="search" placeholder="ค้นหาไอเดีย..." value="${esc(S.q)}" autocomplete="off"></label>
+      </div>
+      <div class="chips-scroll">
+        <button class="fchip ${S.cat==="all"&&!S.mine?"active":""}" data-action="cat" data-v="all">ทั้งหมด</button>
+        <button class="fchip ${S.mine?"active":""}" data-action="mine">🙋 ของฉัน</button>
+        ${CATS.map(c=>`<button class="fchip ${S.cat===c.id&&!S.mine?"active":""}" data-action="cat" data-v="${c.id}">${c.emoji} ${esc(c.short)}</button>`).join("")}
+      </div>
+      <div id="feedList" class="list"></div>
+    </div>
+    <aside class="side">
+      <div class="card"><h3>📌 กติกาการใช้งาน</h3>${rulesList()}</div>
+      <div class="card"><h3>🏆 Top 3 รอบนี้</h3><div id="sideTop" style="margin-top:6px;"></div></div>
+    </aside>
+  </div>
+  <button class="fab" data-action="compose" aria-label="เสนอไอเดีย">${ic("plus")}</button>`;
+}
+function ideaCard(i, rank){
+  const c=catOf(i.cat), on=!!S.me.upvoted[i.id], medal=rank?["🥇","🥈","🥉"][rank-1]:"";
+  return `<article class="idea ${rank===1?"top1":""}" data-action="open" data-id="${i.id}">
+    <div class="idea-tags"><span class="chip cat" style="--c:${c.color}">${c.emoji} ${esc(c.short)}</span>
+      ${rank?`<span class="chip warn"><span class="medal">${medal}</span> อันดับ ${rank}</span>`:""}
+      ${i.editedAt?`<span class="chip" title="ข้อความนี้ถูกแก้ไข">✏️ แก้ไขแล้ว</span>`:""}
+      ${isMine(i.id)?`<span class="chip brand">ของฉัน</span>`:""}</div>
+    <h3>${esc(i.title)}</h3>
+    <p class="txt">${esc(i.text)}</p>
+    <div class="idea-foot">
+      <button class="up ${on?"on":""}" data-action="upvote" data-id="${i.id}" aria-pressed="${on}" aria-label="Upvote">${ic("up")}<span>${i.votes||0}</span></button>
+      <span class="meta">${ic("chat")} ${i.comments||0}</span>
+      <span class="meta sp">${timeAgo(i.ts)}</span>
+      <button class="icon-btn small" data-action="share" data-id="${i.id}" aria-label="แชร์">${ic("share")}</button>
+    </div></article>`;
 }
 function updateFeedList(){
-  const el = document.getElementById("feedPostsList");
-  if(el) el.innerHTML = renderFeedPostsList(state.posts);
+  const el=$("#feedList"); if(!el) return;
+  if(!S.loaded.ideas){ el.innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div>'; return; }
+  const all=visible(), ranks={}; rankedTop(all).filter(i=>(i.votes||0)>0).slice(0,3).forEach((i,k)=>ranks[i.id]=k+1);
+  const q=S.q.trim().toLowerCase();
+  let list=all.filter(i=>(S.mine?isMine(i.id):(S.cat==="all"||i.cat===S.cat)) && (!q||(i.title+" "+i.text).toLowerCase().includes(q)));
+  list=sortIdeas(list,S.sort);
+  el.innerHTML = list.length ? list.map(i=>ideaCard(i,ranks[i.id])).join("")
+    : `<div class="empty"><b>${all.length?"🔍":"🌱"}</b>${all.length?"ไม่พบไอเดียที่ตรงกับตัวกรอง":"ยังไม่มีไอเดียในรอบนี้ มาเป็นคนแรกที่เริ่มกันเลย"}</div>`;
+  const side=$("#sideTop");
+  if(side){ const t=rankedTop(all).filter(i=>(i.votes||0)>0).slice(0,3);
+    side.innerHTML = t.length ? t.map((i,k)=>`<div class="mini" data-action="open" data-id="${i.id}"><span class="medal">${["🥇","🥈","🥉"][k]}</span><div><b>${esc(i.title)}</b><small>▲ ${i.votes} โหวต</small></div></div>`).join("")
+      : '<p class="muted" style="font-size:14px;">ยังไม่มีโหวต ลองกดโหวตไอเดียที่ชอบดู</p>'; }
+}
+function updateHero(){
+  const hs=heroStats(); const set=(id,v)=>{const e=$(id); if(e) e.textContent=v;};
+  set("#hs-ideas",hs.ideas); set("#hs-votes",hs.votes); set("#hs-left",hs.left);
+  const q=$("#quotaChip"); if(q) q.innerHTML=quotaChip();
 }
 
-function renderFeed(){
-  const posts = state.posts;
-  return `
+/* ---- polls ---- */
+function donutSVG(p){
+  const tot=pollTotal(p), R=70, C=2*Math.PI*R; let acc=0;
+  const segs=tot? p.options.map((o,k)=>{ const v=p.counts?.[o.id]||0, len=v/tot*C;
+    const s=`<circle cx="100" cy="100" r="${R}" fill="none" stroke="${POLL_COLORS[k%6]}" stroke-width="30" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-acc}" transform="rotate(-90 100 100)"/>`; acc+=len; return v?s:""; }).join("")
+    : `<circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--line)" stroke-width="30"/>`;
+  return `<svg class="donut" viewBox="0 0 200 200" role="img" aria-label="ผลโหวต">${segs}<text x="100" y="104" text-anchor="middle" font-size="34" font-weight="600">${tot}</text><text x="100" y="128" text-anchor="middle" font-size="13" style="fill:var(--muted)">โหวต</text></svg>`;
+}
+function pollCard(p){
+  const my=S.me.votedPolls[p.id], ended=p.status==="ended", tot=pollTotal(p), show=my||ended||S.council;
+  const legend=p.options.map((o,k)=>{ const v=p.counts?.[o.id]||0, pct=tot?Math.round(v/tot*100):0, c=POLL_COLORS[k%6];
+    return `<div class="res ${my===o.id?"mine":""}" style="--c:${c}"><span class="fill" style="width:${pct}%"></span><span><i class="dot"></i>${esc(o.text)}${my===o.id?" ✓":""}</span><b>${pct}% <small class="muted">(${v})</small></b></div>`; }).join("");
+  return `<article class="card poll">
+    <div class="row sb"><span class="chip ${ended?"":"ok"}">${ended?"ปิดโหวตแล้ว":"กำลังเปิดโหวต"}</span>${show&&!ended?'<span class="live">ผลแบบเรียลไทม์</span>':""}</div>
+    <h3 style="margin-top:10px;">${esc(p.title)}</h3>${p.desc?`<p class="muted" style="margin-top:4px;">${esc(p.desc)}</p>`:""}
+    ${show ? `
+      <div class="row" style="margin-top:12px;"><div class="seg" style="display:inline-flex;"><button class="${S.pollView==="donut"?"active":""}" data-action="pollview" data-v="donut">โดนัท</button><button class="${S.pollView==="bar"?"active":""}" data-action="pollview" data-v="bar">แท่ง</button></div></div>
+      ${S.pollView==="donut" ? `<div class="donut-wrap" style="margin-top:12px;">${donutSVG(p)}<div>${legend}</div></div>` : `<div style="margin-top:6px;">${legend}</div>`}
+      <p class="hint">รวม ${tot} โหวต${!my&&!ended&&S.council?" · (คุณกำลังดูในโหมดสภา)":""}</p>`
+    : `<div style="margin-top:6px;">${p.options.map(o=>`<button class="opt" data-action="vote" data-pid="${p.id}" data-oid="${o.id}"><span class="rad"></span>${esc(o.text)}</button>`).join("")}</div>
+       <p class="hint">โหวตได้คนละ 1 ครั้ง ผลจะแสดงทันทีหลังโหวต · ไม่เปิดเผยตัวตน</p>`}
+  </article>`;
+}
+function pollsView(){
+  const act=S.polls.filter(p=>p.status!=="ended"), end=S.polls.filter(p=>p.status==="ended");
+  return `<div class="page-head"><div><h2>🗳️ ประชามติสภานักเรียน</h2><p>เรื่องสำคัญของโรงเรียนที่สภาอยากฟังเสียงทุกคน</p></div></div>
+  <div class="stack" style="max-width:760px;">
+    ${!S.loaded.polls?'<div class="sk"></div>':""}
+    ${S.loaded.polls&&!S.polls.length?'<div class="empty"><b>🗳️</b>ยังไม่มีประชามติในตอนนี้ รอสภานักเรียนเปิดหัวข้อใหม่</div>':""}
+    ${act.map(pollCard).join("")}
+    ${end.length?`<h3 style="margin-top:8px;">ปิดโหวตแล้ว</h3>${end.map(pollCard).join("")}`:""}
+  </div>`;
+}
+
+/* ---- events ---- */
+const phaseLabel={before:"ก่อนงาน",after:"หลังงาน",closed:"ปิดแล้ว"};
+function starsHTML(key){
+  const v=S.draft.stars[key]||0;
+  return `<div class="stars" role="radiogroup" aria-label="ให้คะแนน">${[1,2,3,4,5].map(n=>`<button type="button" class="star ${n<=v?"on":""}" data-action="star" data-key="${key}" data-n="${n}" aria-label="${n} ดาว">${ic("star",n<=v?"on":"")}</button>`).join("")}</div>`;
+}
+function distHTML(s){
+  if(!s||!s.n) return ""; const mx=Math.max(1,...[1,2,3,4,5].map(k=>s["s"+k]||0));
+  return `<div class="dist">${[5,4,3,2,1].map(k=>`<div class="r"><span>${k}★</span><span class="t"><i style="width:${(s["s"+k]||0)/mx*100}%"></i></span><span>${s["s"+k]||0}</span></div>`).join("")}</div>`;
+}
+function eventCard(ev){
+  const ph=ev.phase||"before", key=`${ev.id}_${ph}`, done=!!S.me.rated[key], b=evAvg(ev,"before"), a=evAvg(ev,"after");
+  const q = ph==="before" ? "คุณคาดหวังกับงานนี้แค่ไหน?" : "หลังจบงาน คุณพึงพอใจแค่ไหน?";
+  const canRate = ph!=="closed" && !done;
+  const showStats = S.council || ph==="closed" || done || (ph==="after" && S.me.rated[`${ev.id}_before`]);
+  let delta="";
+  if(b!=null && a!=null){ const d=a-b; delta=`<span class="delta ${d>=0?"up1":"dn"}">${d>=0?"▲":"▼"} ${Math.abs(d).toFixed(1)}</span>`; }
+  return `<article class="card" id="ev-${ev.id}">
+    <div class="row sb"><span class="chip ${ph==="closed"?"":"brand"}">${ph==="closed"?"ปิดรับแล้ว":"เปิดรับ: "+phaseLabel[ph]}</span>${ev.date?`<span class="muted" style="font-size:13.5px;">${ic("event")} ${fmtDate(new Date(ev.date).getTime())}</span>`:""}</div>
+    <h3 style="margin-top:10px;font-size:20px;">${esc(ev.name)}</h3>${ev.desc?`<p class="muted" style="margin-top:3px;">${esc(ev.desc)}</p>`:""}
+    ${canRate ? `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
+        <b>${q}</b>${starsHTML(key)}
+        ${ph==="after"?`<div class="tagrow">${EV_TAGS.map(([k,l])=>`<button type="button" class="tagbtn ${S.draft.tags[key]?.[k]?"on":""}" data-action="evtag" data-key="${key}" data-t="${k}">${l}</button>`).join("")}</div><p class="hint">เลือกสิ่งที่ประทับใจ (เลือกได้หลายข้อ)</p>`:""}
+        <textarea id="evc-${key}" class="field" rows="2" style="min-height:70px;margin-top:10px;" maxlength="300" placeholder="${ph==="before"?"อยากให้งานนี้เป็นแบบไหน (ไม่บังคับ)":"มีอะไรอยากบอกผู้จัดไหม (ไม่บังคับ)"}"></textarea>
+        <div style="margin-top:10px;"><button class="btn primary" data-action="rate" data-ev="${ev.id}" data-ph="${ph}">${ic("send")} ส่งความพึงพอใจ</button></div>
+      </div>` : (done?`<p class="chip ok" style="margin-top:12px;">${ic("check")} คุณประเมินช่วง “${phaseLabel[ph]}” แล้ว ขอบคุณ</p>`:"")}
+    ${showStats && (b!=null||a!=null) ? `<div class="cmp">
+        <div><small>ก่อนงาน${ev.stats?.before?.n?` · ${ev.stats.before.n} คน`:""}</small><b>${b!=null?b.toFixed(1):"–"}</b></div>
+        <div><small>หลังงาน${ev.stats?.after?.n?` · ${ev.stats.after.n} คน`:""}</small><b>${a!=null?a.toFixed(1):"–"}</b>${delta}</div></div>
+        ${distHTML(ev.stats?.[ph==="before"?"before":"after"]||ev.stats?.after||ev.stats?.before)}`
+      : (showStats?'<p class="hint" style="margin-top:10px;">ยังไม่มีคะแนนจากผู้ร่วมงาน</p>':'<p class="hint" style="margin-top:10px;">ส่งคะแนนแล้วจะเห็นผลสรุปของทุกคน</p>')}
+  </article>`;
+}
+function eventsView(){
+  return `<div class="page-head"><div><h2>🎪 ประเมินกิจกรรม</h2><p>บอกความคาดหวังก่อนงาน และความพึงพอใจหลังจบงาน เพื่อให้งานครั้งหน้าดีกว่าเดิม</p></div></div>
+  <div class="stack" style="max-width:760px;">
+    ${!S.loaded.events?'<div class="sk"></div>':""}
+    ${S.loaded.events&&!S.events.length?'<div class="empty"><b>🎪</b>ยังไม่มีกิจกรรมให้ประเมิน</div>':""}
+    ${S.events.map(eventCard).join("")}
+  </div>`;
+}
+
+/* ---- rank ---- */
+async function loadPrev(){
+  if(S.prev) return;
+  try{ const s=await getDocs(query(collection(db,"ideas"),where("round","==",activeRound-1))); S.prev=s.docs.map(d=>({id:d.id,...d.data()})); }
+  catch(e){ S.prev=[]; fail(e); }
+}
+function rankView(){
+  const r=roundInfo(), cur=S.rankView==="cur", list=cur?S.ideas:(S.prev||[]), top=rankedTop(list).filter(i=>(i.votes||0)>0).slice(0,3);
+  const finished=!cur, rewards=S.settings.rewardsText||CFG.DEFAULT_REWARDS;
+  const pod=(i,k)=>{ const c=catOf(i.cat);
+    return `<div class="pod p${k+1}"><div class="big">${["🥇","🥈","🥉"][k]}</div>
+      <span class="chip cat" style="--c:${c.color};margin:0 auto;">${c.emoji} ${esc(c.short)}</span>
+      <h3 data-action="open" data-id="${i.id}">${esc(i.title)}</h3>
+      <div class="v">▲ ${i.votes} โหวต</div><div class="pts">+${CFG.POINTS[k]} แต้มบุญ</div>
+      ${finished ? (i.claimedAt&&i.rewarded?`<span class="chip ok" style="margin:6px auto 0;">${ic("check")} รับรางวัลแล้ว</span>`:`<button class="btn soft sm" style="margin-top:6px;" data-action="claim" data-id="${i.id}" data-rank="${k+1}">🎁 ฉันเป็นเจ้าของ รับรางวัล</button>`) : `<span class="muted" style="font-size:13px;margin-top:4px;">ลุ้นกันต่อ ประกาศผลเมื่อจบรอบ</span>`}
+    </div>`; };
+  return `<div class="page-head"><div><h2>🏆 Leaderboard & รางวัล</h2><p>3 ข้อเสนอที่ได้ Upvote สูงสุดประจำ 2 สัปดาห์</p></div>
+      <div class="seg"><button class="${cur?"active":""}" data-action="rankview" data-v="cur">รอบนี้ (ถึง ${fmtDate(r.end-1)})</button><button class="${!cur?"active":""}" data-action="rankview" data-v="prev">รอบที่แล้ว</button></div></div>
   <div class="stack">
-    <div class="card">
-      ${cardTitle("feed","เสียงของท่านสำคัญ เราพร้อมรับฟังเสมอ")}
-      <input id="postName" class="field" style="margin-bottom:8px;" placeholder="ชื่อ (ถ้าไม่อยากระบุ ปล่อยว่างได้)" value="${esc(state.draft.postName)}" />
-      <textarea id="postText" class="field" rows="3" placeholder="อยากบอกอะไรโรงเรียนบ้าง พิมพ์ได้เลย ไม่มีใครรู้ว่าเป็นใคร...">${esc(state.draft.postText)}</textarea>
-      <div class="row" style="margin-top:10px;">
-        <select id="postCat" class="field">
-          ${CATEGORIES.map(c=>`<option value="${esc(c.name)}" ${state.draft.postCat===c.name?"selected":""}>${esc(c.name)}</option>`).join("")}
-        </select>
-        <button class="btn btn-orange" id="postBtn">${ICONS.send} ส่งความเห็น</button>
-      </div>
-    </div>
-
-    <div class="card">
-      ${cardTitle("chart","ภาพรวมความคิดเห็นตอนนี้")}
-      <div style="font-size:11.5px;color:var(--muted);margin:-7px 0 10px;">ประจำเดือน ${monthLabel(state.settings.lastResetMonth || monthKey())} · ระบบรีเซ็ตความคิดเห็นและยอดนิยมทุกต้นเดือน</div>
-      <div class="stack" style="gap:7px;">${trendBars(posts)}</div>
-    </div>
-
-    <div class="card">
-      <div class="row" style="gap:8px;flex-wrap:wrap;">
-        <select id="feedFilterCat" class="field" style="flex:1;min-width:130px;">
-          <option value="all" ${state.draft.feedFilterCat==="all"?"selected":""}>ทุกหมวดหมู่</option>
-          <option value="mine" ${state.draft.feedFilterCat==="mine"?"selected":""}>ความเห็นที่ฉันส่ง</option>
-          ${CATEGORIES.map(c=>`<option value="${esc(c.name)}" ${state.draft.feedFilterCat===c.name?"selected":""}>${esc(c.name)}</option>`).join("")}
-        </select>
-        <input id="feedSearchInput" class="field" style="flex:2;min-width:150px;" placeholder="ค้นหาความคิดเห็นที่น่าสนใจ..." value="${esc(state.draft.feedSearchText)}" />
-      </div>
-    </div>
-
-    <div id="feedPostsList" class="stack">${renderFeedPostsList(posts)}</div>
+    ${!cur&&S.prev===null?'<div class="sk"></div>':""}
+    ${top.length ? `<div class="podium">${top.map(pod).join("")}</div>` : `<div class="empty"><b>🏆</b>${cur?"ยังไม่มีข้อเสนอที่ได้โหวต ไปกดโหวตไอเดียที่ชอบกันเลย":"รอบที่แล้วไม่มีข้อมูล"}</div>`}
+    <div class="card"><h3>🎁 รางวัลและแต้มบุญ</h3><p style="margin-top:8px;color:var(--ink2);">${esc(rewards)}</p>
+      <h3 style="margin-top:18px;font-size:16px;">วิธีรับรางวัล (ไม่ต้องบอกชื่อ)</h3>
+      <ol class="steps"><li>รอให้จบรอบ แล้วเปิดหน้านี้ในแท็บ “รอบที่แล้ว”</li><li>กดปุ่ม “ฉันเป็นเจ้าของ” ที่ข้อเสนอของคุณ แล้วใส่ Secret Code ที่ได้ตอนโพสต์</li><li>แสดงหน้าจอยืนยันสิทธิ์ให้สภานักเรียน เพื่อรับรางวัล</li></ol></div>
   </div>`;
 }
 
-function renderWish(){
-  const open = isWishOpenNow();
-  return `
-  <div class="stack">
-    <div class="card" style="background:linear-gradient(160deg,var(--navy),var(--navy-2));border:none;">
-      <div class="card-title" style="color:#fff;"><span class="icon-chip" style="background:rgba(255,255,255,.16);">${ICONS.wish}</span>Gather Wish — คำขอของท่านคืออะไร</div>
-      <p style="color:#C7D2E0;font-size:13px;margin:0;">ช่วงนี้สภานักเรียนเปิดรับไอเดียนโยบายที่อยากให้โรงเรียนปรับปรุง เขียนมาได้เต็มที่</p>
-      ${state.settings.wishDeadline ? `<div style="display:flex;align-items:center;gap:6px;margin-top:10px;color:#C7D2E0;font-size:12px;">${ICONS.clock} ปิดรับภายใน ${new Date(state.settings.wishDeadline).toLocaleString("th-TH",{dateStyle:"medium",timeStyle:"short"})}</div>` : ""}
-    </div>
-
-    ${open ? `
-    <div class="card">
-      <textarea id="wishText" class="field" rows="3" placeholder="พิมพ์ไอเดียของคุณ เช่น อยากให้เพิ่มพัดลมในห้องเรียน หรืออยากให้ปรับตารางสอบ...">${esc(state.draft.wishText)}</textarea>
-      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-        <button class="btn btn-orange" id="wishBtn">${ICONS.send} ส่งไอเดีย</button>
-      </div>
-    </div>` : `<div class="card empty">ตอนนี้ยังไม่เปิดรับไอเดียใหม่ รอสภานักเรียนเปิดรอบถัดไป</div>`}
-
-    <div class="empty" style="font-size:12.5px;">ไอเดียที่ส่งเข้ามาจะถูกส่งตรงถึงสภานักเรียนเท่านั้น ผู้ใช้คนอื่นจะไม่เห็นข้อความของคุณ</div>
-  </div>`;
+/* ---- council ---- */
+function councilLoginView(){
+  return `<div class="card login"><div class="big">${ic("shield")}</div><h2 class="disp" style="font-size:22px;">โหมดสภานักเรียน</h2>
+    <p class="muted" style="margin:6px 0 14px;">ใส่รหัสผ่านเพื่อดูภาพรวมข้อมูลและจัดการระบบ</p>
+    <form data-form="pin"><input id="pinInput" type="password" class="field" style="text-align:center;" placeholder="รหัสผ่านสภานักเรียน" value="${esc(S.draft.pin)}" autocomplete="off" data-draft="pin">
+    ${S.draft.pinErr?`<div class="err">${esc(S.draft.pinErr)}</div>`:""}
+    <button class="btn primary" style="margin-top:14px;" type="submit">${ic("lock")} เข้าสู่ระบบ</button></form></div>`;
+}
+function councilView(){
+  if(!S.council) return councilLoginView();
+  const subs=[["overview","ภาพรวม"],["polls","ประชามติ"],["events","กิจกรรม"],["posts","ดูแลโพสต์"],["settings","ตั้งค่า"]];
+  return `<div class="page-head"><div><h2>🛡️ แดชบอร์ดสภานักเรียน</h2><p>ข้อมูลเพื่อตัดสินใจ จากเสียงของนักเรียน</p></div>
+    <button class="btn line sm" data-action="clogout">${ic("logout")} ออกจากโหมดสภา</button></div>
+    <div class="subnav">${subs.map(([k,l])=>`<button class="fchip ${S.cview===k?"active":""}" data-action="cview" data-v="${k}">${l}</button>`).join("")}</div>
+    <div class="stack">${({overview:cOverview,polls:cPolls,events:cEvents,posts:cPosts,settings:cSettings})[S.cview]()}</div>`;
+}
+function cOverview(){
+  const list=visible(), votes=list.reduce((a,i)=>a+(i.votes||0),0), cm=list.reduce((a,i)=>a+(i.comments||0),0);
+  const cnt=CATS.map(c=>({...c,n:list.filter(i=>i.cat===c.id).length})).sort((a,b)=>b.n-a.n), mx=Math.max(1,...cnt.map(c=>c.n));
+  const vc=CATS.map(c=>({...c,n:list.filter(i=>i.cat===c.id).reduce((a,i)=>a+(i.votes||0),0)})).sort((a,b)=>b.n-a.n);
+  const top=rankedTop(list).slice(0,5);
+  return `<div class="tiles"><div class="tile"><b>${list.length}</b><span>ข้อเสนอรอบนี้</span></div><div class="tile"><b>${votes}</b><span>Upvote รวม</span></div>
+    <div class="tile"><b>${cm}</b><span>คอมเมนต์</span></div><div class="tile"><b>${S.polls.filter(p=>p.status!=="ended").length}</b><span>ประชามติที่เปิดอยู่</span></div></div>
+  <div class="card"><h3>📊 นักเรียนอยากพูดเรื่องอะไรมากที่สุด</h3><div class="bars">${cnt.map(c=>`<div class="bar"><span>${c.emoji} ${esc(c.short)}</span><span class="t"><i style="width:${c.n/mx*100}%;background:${c.color}"></i></span><b>${c.n}</b></div>`).join("")}</div>
+    <h3 style="margin-top:20px;">❤️ หมวดที่ได้รับโหวตมากที่สุด</h3><div class="bars">${vc.map(c=>`<div class="bar"><span>${c.emoji} ${esc(c.short)}</span><span class="t"><i style="width:${c.n/Math.max(1,vc[0].n)*100}%;background:${c.color}"></i></span><b>${c.n}</b></div>`).join("")}</div></div>
+  <div class="card"><h3>🔥 ข้อเสนอแรงสุดตอนนี้</h3>${top.length?top.map(i=>`<div class="item"><div><div class="tt">${esc(i.title)}</div><small class="muted">${catOf(i.cat).emoji} ${esc(catOf(i.cat).short)} · ${i.comments||0} คอมเมนต์</small></div><button class="up" data-action="open" data-id="${i.id}">${ic("up")}<span>${i.votes||0}</span></button></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีข้อมูล</p>'}</div>
+  <div class="card"><h3>🗳️ การมีส่วนร่วมในประชามติ</h3>${S.polls.length?S.polls.map(p=>`<div class="item"><div class="tt">${esc(p.title)}</div><b>${pollTotal(p)} โหวต</b></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีประชามติ</p>'}</div>`;
+}
+function cPolls(){
+  return `<div class="card"><h3>สร้างประชามติใหม่</h3>
+    <label class="lbl">หัวข้อ</label><input class="field" data-draft="pollTitle" value="${esc(S.draft.pollTitle)}" placeholder="เช่น ทรงผมนักเรียน ควรผ่อนปรนไหม" maxlength="120">
+    <label class="lbl">รายละเอียด (ไม่บังคับ)</label><input class="field" data-draft="pollDesc" value="${esc(S.draft.pollDesc)}" maxlength="200">
+    <label class="lbl">ตัวเลือก</label><div class="stack" style="gap:8px;">${S.draft.pollOpts.map((o,i)=>`<div class="row" style="flex-wrap:nowrap;"><input class="field" data-draft-opt="${i}" value="${esc(o)}" placeholder="ตัวเลือกที่ ${i+1}" maxlength="80">${S.draft.pollOpts.length>2?`<button class="icon-btn" data-action="rmopt" data-i="${i}" aria-label="ลบตัวเลือก">${ic("x")}</button>`:""}</div>`).join("")}</div>
+    <div class="row" style="margin-top:12px;">${S.draft.pollOpts.length<6?`<button class="btn line sm" data-action="addopt">${ic("plus")} เพิ่มตัวเลือก</button>`:""}<button class="btn primary sm" data-action="createpoll" style="margin-left:auto;">${ic("send")} เปิดโหวต</button></div></div>
+  <div class="card"><h3>ประชามติทั้งหมด</h3>${S.polls.length?S.polls.map(p=>`<div class="item"><div><div class="tt">${esc(p.title)}</div><small class="muted">${pollTotal(p)} โหวต · ${p.status==="ended"?"ปิดแล้ว":"เปิดอยู่"}</small></div>
+    <div class="row" style="flex-wrap:nowrap;">${p.status==="ended"?`<button class="btn line sm" data-action="pollstatus" data-id="${p.id}" data-v="active">เปิดอีกครั้ง</button>`:`<button class="btn line sm" data-action="pollstatus" data-id="${p.id}" data-v="ended">ปิดโหวต</button>`}<button class="icon-btn" data-action="delpoll" data-id="${p.id}" aria-label="ลบ">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มี</p>'}</div>`;
+}
+function cEvents(){
+  return `<div class="card"><h3>สร้างแบบประเมินกิจกรรม</h3>
+    <label class="lbl">ชื่อกิจกรรม</label><input class="field" data-draft="evName" value="${esc(S.draft.evName)}" placeholder="เช่น กีฬาสี 2569" maxlength="100">
+    <label class="lbl">วันที่จัดงาน</label><input class="field" type="date" data-draft="evDate" value="${esc(S.draft.evDate)}">
+    <label class="lbl">รายละเอียด (ไม่บังคับ)</label><input class="field" data-draft="evDesc" value="${esc(S.draft.evDesc)}" maxlength="200">
+    <div style="margin-top:12px;text-align:right;"><button class="btn primary sm" data-action="createev">${ic("plus")} สร้าง</button></div></div>
+  <div class="card"><h3>กิจกรรมทั้งหมด</h3>${S.events.length?S.events.map(ev=>`<div class="item" style="flex-direction:column;align-items:stretch;"><div class="row sb"><div class="tt">${esc(ev.name)}</div><span class="chip">${ev.phase==="closed"?"ปิด":"เปิด: "+phaseLabel[ev.phase||"before"]}</span></div>
+    <small class="muted">ก่อนงาน ${evAvg(ev,"before")?.toFixed(1)??"–"} (${ev.stats?.before?.n||0} คน) · หลังงาน ${evAvg(ev,"after")?.toFixed(1)??"–"} (${ev.stats?.after?.n||0} คน)</small>
+    <div class="row" style="margin-top:8px;"><div class="seg phase">${["before","after","closed"].map(p=>`<button class="${(ev.phase||"before")===p?"active":""}" data-action="evphase" data-id="${ev.id}" data-v="${p}">${p==="closed"?"ปิดรับ":"รับ"+phaseLabel[p]}</button>`).join("")}</div>
+    <button class="btn line sm" data-action="evcomments" data-id="${ev.id}">💬 ความเห็น</button><button class="icon-btn" data-action="delev" data-id="${ev.id}" aria-label="ลบ">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มี</p>'}</div>`;
+}
+function cPosts(){
+  const list=[...S.ideas].sort((a,b)=>b.ts-a.ts);
+  return `<div class="card"><h3>โพสต์ในรอบนี้ (${list.length})</h3><p class="hint">ซ่อนโพสต์ที่ไม่เหมาะสมได้ (กู้คืนได้) · ผู้ชนะที่รับรางวัลแล้วให้กด “มอบรางวัลแล้ว”</p>
+  ${list.length?list.map(i=>`<div class="item ${i.hidden?"hidden-post":""}"><div style="min-width:0;"><div class="tt" data-action="open" data-id="${i.id}" style="cursor:pointer;">${esc(i.title)}</div>
+    <small class="muted">▲ ${i.votes||0} · ${timeAgo(i.ts)}${i.claimedAt?" · ขอรับรางวัลแล้ว":""}${i.rewarded?" · มอบรางวัลแล้ว":""}</small></div>
+    <div class="row" style="flex-wrap:nowrap;">${i.claimedAt&&!i.rewarded?`<button class="btn soft sm" data-action="rewarded" data-id="${i.id}">มอบรางวัลแล้ว</button>`:""}
+    <button class="btn line sm" data-action="hide" data-id="${i.id}" data-v="${i.hidden?0:1}">${i.hidden?"แสดง":"ซ่อน"}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีโพสต์</p>'}</div>`;
+}
+function cSettings(){
+  const def=!S.settings.councilPinHash;
+  return `${def?`<div class="warnbar">${ic("info")}<span>ตอนนี้ยังใช้รหัสสภาเริ่มต้น กรุณาตั้งรหัสใหม่ด้านล่างก่อนเปิดใช้งานจริง</span></div>`:""}
+  <div class="card"><h3>เปลี่ยนรหัสผ่านสภา</h3><div class="row" style="margin-top:10px;flex-wrap:nowrap;"><input class="field" type="password" data-draft="newPin" value="${esc(S.draft.newPin)}" placeholder="รหัสใหม่ (อย่างน้อย 4 ตัว)" autocomplete="new-password"><button class="btn primary sm" data-action="savepin">บันทึก</button></div></div>
+  <div class="card"><h3>ข้อความรางวัล (หน้า Leaderboard)</h3><textarea class="field" rows="3" data-draft="rewards" style="margin-top:10px;min-height:80px;">${esc(S.draft.rewards??S.settings.rewardsText??CFG.DEFAULT_REWARDS)}</textarea>
+    <div style="text-align:right;margin-top:10px;"><button class="btn primary sm" data-action="saverewards">บันทึก</button></div></div>`;
 }
 
-function pollCard(poll){
-  const total = poll.options.reduce((a,o)=>a+o.votes,0) || 1;
-  const voted = state.mine.votedPolls.includes(poll.id);
-  const rated = state.mine.ratedPolls.includes(poll.id);
-  const showResults = voted || poll.status==="ended";
-  const avg = poll.feedback.length ? (poll.feedback.reduce((a,f)=>a+f.rating,0)/poll.feedback.length).toFixed(1) : null;
-
-  const optionsHtml = poll.options.map(o=>{
-    const pct = Math.round((o.votes/total)*100);
-    if(showResults){
-      return `<div class="result-row"><div class="result-fill" style="width:${pct}%"></div><div class="result-inner"><span>${esc(o.text)}</span><b>${pct}%</b></div></div>`;
-    }
-    return `<button class="option-btn" onclick="vote('${poll.id}','${o.id}')">${esc(o.text)}</button>`;
-  }).join("");
-
-  let feedbackHtml = "";
-  if(poll.status==="ended"){
-    feedbackHtml = rated
-      ? `<div style="font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:10px;">${ICONS.check} ขอบคุณสำหรับความคิดเห็น</div>`
-      : `<div class="stack" style="gap:8px;margin-top:12px;border-top:1px solid var(--line);padding-top:12px;">
-           <span style="font-size:13px;color:var(--navy);font-weight:600;">กิจกรรมนี้เป็นอย่างไรบ้าง</span>
-           <div class="stars" id="stars-${poll.id}">${[1,2,3,4,5].map(n=>`<button class="star-btn" data-poll="${poll.id}" data-val="${n}" onclick="setRating('${poll.id}',${n})">${ICONS.star}</button>`).join("")}</div>
-           <input class="field" id="comment-${poll.id}" placeholder="มีข้อเสนอแนะเพิ่มเติมไหม (ถ้ามี)" />
-           <button class="btn btn-orange" style="align-self:flex-start;" onclick="doSubmitFeedback('${poll.id}')">ส่งคะแนน</button>
-         </div>`;
-    if(avg) feedbackHtml += `<div style="font-size:12px;color:var(--muted);margin-top:8px;">คะแนนเฉลี่ย ${avg} / 5 จาก ${poll.feedback.length} คน</div>`;
-  }
-
-  return `
-  <div class="card">
-    <div class="row">
-      <span style="font-weight:600;color:var(--navy);font-size:15px;">${esc(poll.title)}</span>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span class="tag" style="background:${poll.status==="active"?"#E5F5EA":"#F1F1F1"};color:${poll.status==="active"?"#2E8B4F":"var(--muted)"}">${poll.status==="active"?"กำลังโหวต":"จบกิจกรรมแล้ว"}</span>
-        ${state.isCouncil ? `<button class="btn-ghost" onclick="deletePoll('${poll.id}')">${ICONS.trash}</button>` : ""}
-      </div>
-    </div>
-    <div style="margin-top:12px;">${optionsHtml}</div>
-    ${showResults ? `<div style="font-size:11.5px;color:var(--muted);">รวม ${total===1 && poll.options.every(o=>o.votes===0)?0:total} โหวต</div>` : ""}
-    ${feedbackHtml}
-    ${state.isCouncil && poll.status==="active" ? `<button class="btn btn-outline" style="margin-top:12px;" onclick="endPoll('${poll.id}')">จบกิจกรรมนี้</button>` : ""}
-  </div>`;
+/* ---- main render ---- */
+function renderView(){
+  S.dirty=false;
+  const v=$("#view");
+  v.innerHTML = ({feed:feedView,polls:pollsView,events:eventsView,rank:rankView,council:councilView})[S.tab]();
+  if(S.tab==="feed") updateFeedList();
+  if(S.tab==="rank" && S.rankView==="prev" && S.prev===null) loadPrev().then(()=>{ if(S.tab==="rank") renderView(); });
+}
+function refresh(){
+  if(S.tab==="feed"){ updateFeedList(); updateHero(); return; }
+  const a=document.activeElement;
+  if(a && $("#view").contains(a) && /INPUT|TEXTAREA|SELECT/.test(a.tagName)){ S.dirty=true; return; }
+  renderView();
 }
 
-let ratingDraft = {};
-function setRating(pollId, val){ ratingDraft[pollId]=val;
-  document.querySelectorAll(`#stars-${pollId} .star-btn`).forEach(btn=>{
-    btn.innerHTML = Number(btn.dataset.val) <= val ? ICONS.starFill : ICONS.star;
-    btn.style.color = Number(btn.dataset.val) <= val ? "var(--amber)" : "var(--muted)";
-  });
+/* =====================================================================
+   modals
+   ===================================================================== */
+function openCompose(){
+  if(quotaUsed()){ toast("คุณส่งข้อเสนอรอบนี้ไปแล้ว รอรอบถัดไปนะ",true); return; }
+  const d=S.draft.compose; S.modal={type:"compose"};
+  showModal(`<div class="sheet-head"><h2 class="disp">💡 เสนอไอเดียให้โรงเรียน</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div>
+  <form data-form="compose">
+    <label class="lbl">เลือกหมวด</label>
+    <div class="tagrow" id="cCats">${CATS.map(c=>`<button type="button" class="tagbtn ${d.cat===c.id?"on":""}" data-action="ccat" data-v="${c.id}">${c.emoji} ${esc(c.short)}</button>`).join("")}</div>
+    <label class="lbl" for="cTitle">หัวข้อ <span class="counter muted" id="cTc">${d.title.length}/80</span></label>
+    <input id="cTitle" class="field" maxlength="80" placeholder="สรุปข้อเสนอสั้น ๆ เช่น เพิ่มพัดลมในห้อง ม.4" value="${esc(d.title)}" data-draft-c="title" autocomplete="off">
+    <label class="lbl" for="cText">รายละเอียด <span class="counter muted" id="cXc">${d.text.length}/600</span></label>
+    <textarea id="cText" class="field" maxlength="600" placeholder="เล่าปัญหา และอยากให้โรงเรียนปรับอย่างไร" data-draft-c="text">${esc(d.text)}</textarea>
+    <p class="hint">🕶️ ไม่ระบุตัวตน · 🛡️ กรุณาไม่ใส่ชื่อจริงของบุคคล · ✏️ แก้ไขได้ภายใน 30 นาที</p>
+    <div class="err" id="cErr" role="alert"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px;"><button type="button" class="btn line" data-action="close">ยกเลิก</button><button class="btn primary" id="cBtn" type="submit">${ic("send")} ส่งข้อเสนอ</button></div>
+  </form>`);
+  setTimeout(()=>$("#cTitle")?.focus(),60);
 }
-function doSubmitFeedback(pollId){
-  const comment = document.getElementById(`comment-${pollId}`)?.value || "";
-  submitFeedback(pollId, ratingDraft[pollId]||0, comment);
+function openCodeModal(id, code){
+  S.modal={type:"code",id};
+  showModal(`<div class="sheet-head"><h2 class="disp">🎉 ส่งข้อเสนอแล้ว!</h2></div>
+    <p>นี่คือ <b>Secret Code</b> ของคุณ ใช้แก้ไขข้อความ (ภายใน 30 นาที) และรับรางวัลถ้าติด Top 3</p>
+    <div class="secret" id="secretCode">${esc(code)}</div>
+    <div class="warnbar">${ic("info")}<span>เก็บรหัสนี้ไว้ดี ๆ ระบบไม่เก็บตัวตนของคุณ จึง <b>กู้คืนรหัสให้ไม่ได้</b> (รหัสถูกบันทึกในเบราว์เซอร์เครื่องนี้ให้ด้วย)</span></div>
+    <div class="row" style="margin-top:16px;"><button class="btn line" data-action="copycode" data-code="${esc(code)}">${ic("copy")} คัดลอกรหัส</button><button class="btn primary" data-action="close" style="margin-left:auto;">เก็บรหัสแล้ว</button></div>`);
 }
-
-function renderVote(){
-  const active = state.polls.filter(p=>p.status==="active");
-  const ended = state.polls.filter(p=>p.status==="ended");
-  if(state.polls.length===0) return `<div class="empty">ยังไม่มีการโหวตในตอนนี้</div>`;
-  let html = "";
-  if(active.length){ html += `<div style="font-weight:600;color:var(--navy);font-size:14px;margin:2px 0 -2px;">กำลังเปิดโหวต</div>` + active.map(pollCard).join(""); }
-  if(ended.length){ html += `<div style="font-weight:600;color:var(--navy);font-size:14px;margin:6px 0 -2px;">กิจกรรมที่จบแล้ว</div>` + ended.map(pollCard).join(""); }
-  return `<div class="stack">${html}</div>`;
+function openRules(){
+  S.modal={type:"rules"};
+  showModal(`<div class="sheet-head"><h2 class="disp">📌 กติกาการใช้งาน</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div>${rulesList()}`);
 }
-
-function renderCouncilLogin(){
-  return `
-  <div class="card login-card">
-    <div class="login-icon" style="color:var(--navy);">${ICONS.council}</div>
-    <h3 style="margin:10px 0 2px;color:var(--navy);">โหมดสภานักเรียน</h3>
-    <p style="font-size:13px;color:var(--muted);margin:0 0 6px;">ใส่รหัสผ่านของสภานักเรียนเพื่อเข้าดูภาพรวมและจัดการระบบ</p>
-    <input id="pinInput" type="password" class="field" placeholder="กรอกรหัสผ่านสภานักเรียน" value="${esc(state.draft.pinInput)}" />
-    ${state.draft.pinError ? `<div class="err">${state.draft.pinError}</div>` : ""}
-    <div style="margin-top:14px;"><button class="btn btn-navy" id="unlockBtn">${ICONS.lock} เข้าสู่ระบบ</button></div>
-  </div>`;
+function detailHTML(i){
+  const c=catOf(i.cat), on=!!S.me.upvoted[i.id], left=CFG.EDIT_MIN*60000-(Date.now()-i.ts);
+  return `<div class="sheet-head"><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("back")}</button><div class="row"><button class="icon-btn" data-action="share" data-id="${i.id}" aria-label="แชร์">${ic("share")}</button></div></div>
+  <div class="idea-tags"><span class="chip cat" style="--c:${c.color}">${c.emoji} ${esc(c.name)}</span>${i.editedAt?'<span class="chip">✏️ แก้ไขแล้ว</span>':""}${i.hidden?'<span class="chip bad">ถูกซ่อน</span>':""}</div>
+  <h2 class="title" id="dTitle">${esc(i.title)}</h2><p class="body-txt" id="dText">${esc(i.text)}</p>
+  <p class="hint" style="margin-top:10px;">โพสต์เมื่อ ${fmtDT(i.ts)}${i.editedAt?` · แก้ไขล่าสุด ${fmtDT(i.editedAt)}`:""}</p>
+  <div class="row" style="margin-top:14px;">
+    <button class="up ${on?"on":""}" id="dUp" data-action="upvote" data-id="${i.id}">${ic("up")}<span id="dVotes">${i.votes||0}</span></button>
+    ${(i.history||[]).length?`<button class="btn line sm" data-action="history" data-id="${i.id}">📜 ดูประวัติการแก้ไข</button>`:""}
+    ${left>0?`<button class="btn line sm" data-action="edit" data-id="${i.id}">${ic("edit")} แก้ไข · เหลือ ${Math.ceil(left/60000)} นาที</button>`:""}
+  </div>
+  <h3 style="margin:22px 0 4px;font-size:17px;">💬 ความคิดเห็น <span class="muted" id="dCmCount">(${i.comments||0})</span></h3>
+  <div id="dComments"></div>
+  <form data-form="comment" class="row" style="flex-wrap:nowrap;margin-top:10px;"><input id="cmText" class="field" maxlength="300" placeholder="แสดงความเห็นแบบไม่ระบุตัวตน..." autocomplete="off"><button class="btn primary" type="submit" aria-label="ส่ง">${ic("send")}</button></form>`;
 }
-
-function renderCouncilDashboard(){
-  const topPosts = [...state.posts].sort((a,b)=>b.likes-a.likes).slice(0,3);
-  const sortedCats = [...CATEGORIES].map(c=>({...c,count:state.posts.filter(p=>p.category===c.name).length})).sort((a,b)=>b.count-a.count);
-  const max = Math.max(1, ...sortedCats.map(c=>c.count));
-  return `
-  <div class="stack">
-    <div class="row">
-      <div class="card-title" style="margin:0;color:#fff;"><span class="icon-chip">${ICONS.council}</span>แดชบอร์ดสภานักเรียน</div>
-      <button class="btn-ghost" style="color:#fff;" onclick="exitCouncil()">${ICONS.unlock}</button>
-    </div>
-
-    <div class="card">
-      ${cardTitle("sparkle","สรุป: นักเรียนต้องการอะไรมากที่สุด")}
-      <div style="font-size:11.5px;color:var(--muted);margin:-9px 0 10px;">ข้อมูลประจำเดือน ${monthLabel(state.settings.lastResetMonth || monthKey())} · ระบบรีเซ็ตอัตโนมัติทุกต้นเดือน</div>
-      <div class="stack" style="gap:6px;margin-bottom:12px;">
-        ${sortedCats.map(c=>`
-          <div class="bar-row">
-            <div class="bar-label">${esc(c.name)}</div>
-            <div class="bar-track"><div class="bar-fill" style="width:${(c.count/max)*100}%;background:${c.color}"></div></div>
-            <div class="bar-val">${c.count}</div>
-          </div>`).join("")}
-      </div>
-      <div style="font-size:13px;color:var(--navy);font-weight:600;margin-bottom:6px;">ความเห็นที่ได้รับความสนใจสูงสุด</div>
-      ${topPosts.length===0 ? `<div style="font-size:13px;color:var(--muted);">ยังไม่มีข้อมูล</div>` :
-        topPosts.map(p=>`<div style="font-size:13px;padding:6px 0;border-top:1px solid var(--line);"><span style="color:var(--orange);font-weight:600;">♥ ${p.likes}</span> — ${esc(p.text.slice(0,70))}${p.text.length>70?"…":""} <span style="color:var(--muted);">(${p.name?esc(p.name):"ไม่ระบุชื่อ"})</span></div>`).join("")}
-    </div>
-
-    <div class="card">
-      ${cardTitle("wish","จัดการ Gather Wish")}
-      <div class="row" style="margin-bottom:10px;">
-        <span style="font-size:13px;">สถานะตอนนี้: <b>${isWishOpenNow()?"เปิดรับไอเดีย":"ปิดรับไอเดีย"}</b></span>
-        <button class="btn ${state.settings.wishOpen?"btn-outline":"btn-orange"}" onclick="toggleWishOpen()">${state.settings.wishOpen?"ปิดรับ":"เปิดรับ"}</button>
-      </div>
-      <label style="font-size:12px;color:var(--muted);">กำหนดวัน-เวลาปิดรับ (ไม่บังคับ)</label>
-      <input type="datetime-local" class="field" id="deadlineInput" value="${state.settings.wishDeadline ? state.settings.wishDeadline.slice(0,16) : ""}" />
-      <div class="row" style="margin-top:10px;">
-        <span style="font-size:12px;color:var(--muted);">ตอนนี้มีไอเดียส่งเข้ามาแล้ว ${state.wishes.length} รายการ</span>
-        <button class="btn btn-outline" onclick="openWishArchive()">${ICONS.wish} ดูคลังคำขอทั้งหมด</button>
-      </div>
-    </div>
-
-    <div class="card">
-      ${cardTitle("vote","เปิดโหวตกิจกรรมใหม่")}
-      <input id="pollTitle" class="field" placeholder="ตั้งหัวข้อโหวต เช่น กิจกรรมวันกีฬาสีควรเป็นแบบไหน" value="${esc(state.draft.pollTitle)}" />
-      <div class="stack" style="gap:6px;margin-top:8px;" id="pollOpts">
-        ${state.draft.pollOpts.map((o,i)=>`
-          <div style="display:flex;gap:6px;">
-            <input class="field poll-opt" data-idx="${i}" placeholder="ตัวเลือกที่ ${i+1}" value="${esc(o)}" style="flex:1;" />
-            ${state.draft.pollOpts.length>2 ? `<button class="btn-ghost" onclick="removePollOpt(${i})">${ICONS.x}</button>` : ""}
-          </div>`).join("")}
-      </div>
-      <div class="row" style="margin-top:10px;">
-        <button class="btn btn-outline" onclick="addPollOpt()">${ICONS.plus} เพิ่มตัวเลือก</button>
-        <button class="btn btn-orange" id="createPollBtn">${ICONS.send} เปิดโหวต</button>
-      </div>
-    </div>
-  </div>`;
+function renderComments(){
+  const el=$("#dComments"); if(!el) return; const i=getIdea(S.modal.id);
+  el.innerHTML = S.comments.length ? S.comments.map(c=>`<div class="cm"><div class="av">${anonFace(c.a||c.id)}</div><div style="min-width:0;flex:1;"><div class="who"><b>นิรนาม #${anonNo(c.a||c.id)}</b>${i&&c.a===i.a?'<span class="chip brand" style="padding:1px 8px;font-size:11.5px;">ผู้เสนอ</span>':""}<span>${timeAgo(c.ts)}</span>${S.council?`<button class="icon-btn small" data-action="delcm" data-id="${c.id}" aria-label="ลบ">${ic("trash")}</button>`:""}</div><p>${esc(c.text)}</p></div></div>`).join("")
+    : '<p class="muted" style="padding:12px 0;font-size:14.5px;">ยังไม่มีความคิดเห็น เป็นคนแรกเลย</p>';
+  const cc=$("#dCmCount"); if(cc) cc.textContent=`(${S.comments.length})`;
 }
-function exitCouncil(){ state.isCouncil=false; state.councilView="dashboard"; render(); }
-function openWishArchive(){ state.councilView="archive"; render(); }
-function closeWishArchive(){ state.councilView="dashboard"; render(); }
-
-function renderCouncilWishArchive(){
-  return `
-  <div class="stack">
-    <div class="row">
-      <div class="card-title" style="margin:0;color:#fff;"><span class="icon-chip">${ICONS.wish}</span>คลังคำขอ Gather Wish</div>
-      <button class="btn-ghost" style="color:#fff;" onclick="closeWishArchive()">${ICONS.unlock}</button>
-    </div>
-    <div style="font-size:12px;color:#C7D2E0;margin:-6px 0 0;">รวมคำขอทั้งหมด ${state.wishes.length} รายการจากทุกคน</div>
-    ${state.wishes.length===0 ? `<div class="empty">ยังไม่มีไอเดียถูกส่งเข้ามา</div>` : state.wishes.map(w=>`
-      <div class="post">
-        <div class="row" style="align-items:flex-start;">
-          <div class="post-text" style="margin:0;flex:1;">${esc(w.text)}</div>
-          <button class="btn-ghost" onclick="deleteWish('${w.id}')">${ICONS.trash}</button>
-        </div>
-        <div class="time" style="margin-top:6px;">${timeAgo(w.ts)}</div>
-      </div>`).join("")}
-  </div>`;
+async function openDetail(id){
+  let i=getIdea(id);
+  if(!i){ try{ const s=await getDoc(doc(db,"ideas",id)); if(s.exists()) i={id,...s.data()}; }catch(e){ fail(e); } }
+  if(!i){ toast("ไม่พบไอเดียนี้",true); return; }
+  if(commentsUnsub){ commentsUnsub(); commentsUnsub=null; }
+  S.modal={type:"detail",id,idea:i}; showModal(detailHTML(i),true);
+  commentsUnsub=onSnapshot(query(collection(db,"ideas",id,"comments"),orderBy("ts","asc")),snap=>{
+    S.comments=snap.docs.map(d=>({id:d.id,...d.data()})); renderComments();
+  },()=>{});
 }
-
-function addPollOpt(){ state.draft.pollOpts.push(""); render(); }
-function removePollOpt(i){ state.draft.pollOpts.splice(i,1); render(); }
-
-function renderBottomNav(){
-  const items = [["feed","feed","ระบายความเห็น"],["wish","wish","Gather Wish"],["vote","vote","โหวต"],["council","council","สภานักเรียน"]];
-  return `<div class="bottomnav">
-    ${items.map(([key,icon,label])=>`
-      <button class="navbtn ${state.tab===key?"active":""}" onclick="setTab('${key}')">${ICONS[icon]}<span>${label}</span></button>`).join("")}
-  </div>`;
+function patchModalIdea(){
+  if(!S.modal||S.modal.type!=="detail") return; const i=getIdea(S.modal.id); if(!i) return;
+  const v=$("#dVotes"); if(v) v.textContent=i.votes||0;
+  const u=$("#dUp"); if(u){ u.classList.toggle("on",!!S.me.upvoted[i.id]); }
+}
+function openHistory(id){
+  const i=getIdea(id); const vers=[...(i.history||[]),{title:i.title,text:i.text,ts:i.editedAt||i.ts}];
+  S.modal={type:"history",id,idea:i};
+  const pairs=[]; for(let k=0;k<vers.length-1;k++) pairs.push([vers[k],vers[k+1]]);
+  showModal(`<div class="sheet-head"><button class="icon-btn" data-action="detail" data-id="${id}" aria-label="กลับ">${ic("back")}</button><h2 class="disp">📜 ประวัติการแก้ไข</h2><span style="width:40px"></span></div>
+  <p class="hint">เทียบข้อความ Before / After · <mark class="del">ส่วนที่ถูกลบ</mark> <mark class="add">ส่วนที่เพิ่ม</mark></p>
+  ${pairs.map(([a,b],k)=>{ const t=diffHTML(a.title,b.title), x=diffHTML(a.text,b.text);
+    return `<div class="ver"><b>การแก้ไขครั้งที่ ${k+1}</b> <span class="muted" style="font-size:13px;">· ${fmtDT(b.ts)}</span>
+      <div class="ba"><div><small>BEFORE · หัวข้อ</small>${t.a}</div><div><small>AFTER · หัวข้อ</small>${t.b}</div></div>
+      <div class="ba"><div><small>BEFORE · รายละเอียด</small>${x.a}</div><div><small>AFTER · รายละเอียด</small>${x.b}</div></div></div>`; }).join("")}`, true);
+}
+function openEdit(id){
+  const i=getIdea(id); if(Date.now()-i.ts>CFG.EDIT_MIN*60000){ toast("เลยเวลาแก้ไข 30 นาทีแล้ว",true); return; }
+  S.modal={type:"edit",id,idea:i};
+  showModal(`<div class="sheet-head"><button class="icon-btn" data-action="detail" data-id="${id}" aria-label="กลับ">${ic("back")}</button><h2 class="disp">✏️ แก้ไขข้อเสนอ</h2><span style="width:40px"></span></div>
+  <form data-form="edit">
+    <label class="lbl" for="eCode">Secret Code</label><input id="eCode" class="field" placeholder="BB-XXXX-XXXX-XXXX" value="${esc(S.codes[id]||"")}" autocomplete="off" autocapitalize="characters">
+    <label class="lbl" for="eTitle">หัวข้อ</label><input id="eTitle" class="field" maxlength="80" value="${esc(i.title)}">
+    <label class="lbl" for="eText">รายละเอียด</label><textarea id="eText" class="field" maxlength="600">${esc(i.text)}</textarea>
+    <p class="hint">การแก้ไขทุกครั้งถูกบันทึกเป็นประวัติ และจะมีสัญลักษณ์ ✏️ บนการ์ด</p>
+    <div class="err" id="eErr" role="alert"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px;"><button class="btn primary" type="submit">${ic("check")} บันทึกการแก้ไข</button></div></form>`);
+}
+function openClaim(id, rank){
+  S.modal={type:"claim",id,rank,idea:getIdea(id)};
+  showModal(`<div class="sheet-head"><h2 class="disp">🎁 รับรางวัล</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div>
+  <p class="muted">ใส่ Secret Code (Claim Key) ที่ได้ตอนส่งข้อเสนอ เพื่อยืนยันว่าคุณคือเจ้าของ โดยไม่ต้องบอกชื่อ</p>
+  <form data-form="claim"><label class="lbl" for="clCode">Claim Key</label><input id="clCode" class="field" placeholder="BB-XXXX-XXXX-XXXX" value="${esc(S.codes[id]||"")}" autocomplete="off" autocapitalize="characters">
+  <div class="err" id="clErr" role="alert"></div><div style="margin-top:14px;text-align:right;"><button class="btn primary" type="submit">ยืนยันสิทธิ์</button></div></form>`);
+}
+function showVoucher(i, rank, ts){
+  showModal(`<div class="sheet-head"><h2 class="disp">✅ ยืนยันสิทธิ์แล้ว</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div>
+  <div class="voucher"><div style="font-size:42px;">${["🥇","🥈","🥉"][(rank||1)-1]}</div><b>+${CFG.POINTS[(rank||1)-1]} แต้มบุญ</b>
+    <div style="margin-top:6px;">${esc(i.title)}</div><div style="font-size:13px;color:#BCD0E6;margin-top:8px;">รหัสอ้างอิง ${esc(i.id.slice(0,8).toUpperCase())} · ยืนยันเมื่อ ${fmtDT(ts)}</div></div>
+  <p class="hint" style="margin-top:12px;text-align:center;">แสดงหน้าจอนี้ให้สภานักเรียน เพื่อรับรางวัล</p>`);
+}
+async function openEvComments(id){
+  const ev=S.events.find(e=>e.id===id); S.modal={type:"evc",id};
+  showModal(`<div class="sheet-head"><h2 class="disp">💬 ความเห็น: ${esc(ev?.name||"")}</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div><div id="evcBody"><div class="sk"></div></div>`,true);
+  try{
+    const s=await getDocs(collection(db,"events",id,"responses")); const rs=s.docs.map(d=>d.data()).filter(r=>r.comment||(r.tags||[]).length).sort((a,b)=>b.ts-a.ts);
+    const tl=Object.fromEntries(EV_TAGS);
+    $("#evcBody").innerHTML = rs.length ? rs.map(r=>`<div class="item"><div><div>${"★".repeat(r.stars)}<span class="muted">${"★".repeat(5-r.stars)}</span> <span class="chip">${phaseLabel[r.phase]||r.phase}</span></div>
+      ${r.comment?`<p style="margin-top:4px;white-space:pre-wrap;">${esc(r.comment)}</p>`:""}${(r.tags||[]).length?`<small class="muted">${r.tags.map(t=>esc(tl[t]||t)).join(" · ")}</small>`:""}</div><small class="muted">${timeAgo(r.ts)}</small></div>`).join("")
+      : '<p class="muted">ยังไม่มีความเห็น</p>';
+  }catch(e){ fail(e); }
 }
 
-/* ---------------- main render ---------------- */
-function render(){
-  document.documentElement.style.setProperty("--accent", accent());
-  const app = document.getElementById("app");
-  let body = "";
-  if(state.tab==="feed") body = renderFeed();
-  else if(state.tab==="wish") body = renderWish();
-  else if(state.tab==="vote") body = renderVote();
-  else if(state.tab==="council") body = state.isCouncil ? (state.councilView==="archive" ? renderCouncilWishArchive() : renderCouncilDashboard()) : renderCouncilLogin();
+/* =====================================================================
+   event delegation
+   ===================================================================== */
+const ACT = {
+  tab:el=>setTab(el.dataset.tab),
+  theme:()=>{ const t=document.documentElement.dataset.theme==="dark"?"light":"dark"; document.documentElement.dataset.theme=t; LS.set("bb_theme",t); buildNav(); },
+  compose:openCompose, rules:openRules, close:closeModal,
+  ccat:el=>{ S.draft.compose.cat=el.dataset.v; $("#cCats").querySelectorAll(".tagbtn").forEach(b=>b.classList.toggle("on",b.dataset.v===el.dataset.v)); },
+  sort:el=>{ S.sort=el.dataset.v; renderView(); },
+  cat:el=>{ S.cat=el.dataset.v; S.mine=false; renderView(); },
+  mine:()=>{ S.mine=!S.mine; renderView(); },
+  open:el=>openDetail(el.dataset.id),
+  detail:el=>openDetail(el.dataset.id),
+  upvote:el=>{ toggleUpvote(el.dataset.id); el.classList.add("pop"); },
+  share:el=>shareIdea(el.dataset.id),
+  history:el=>openHistory(el.dataset.id), edit:el=>openEdit(el.dataset.id),
+  claim:el=>openClaim(el.dataset.id, +el.dataset.rank),
+  copycode:async el=>toast((await copyText(el.dataset.code))?"คัดลอกรหัสแล้ว":"คัดลอกไม่สำเร็จ"),
+  delcm:el=>deleteComment(el.dataset.id),
+  vote:el=>votePoll(el.dataset.pid, el.dataset.oid),
+  pollview:el=>{ S.pollView=el.dataset.v; renderView(); },
+  star:el=>{ const k=el.dataset.key,n=+el.dataset.n; S.draft.stars[k]=n;
+    el.closest(".stars").querySelectorAll(".star").forEach((b,idx)=>{ const on=idx<n; b.classList.toggle("on",on); b.firstElementChild.classList.toggle("on",on); }); },
+  evtag:el=>{ const k=el.dataset.key,t=el.dataset.t; (S.draft.tags[k]??={})[t]=!S.draft.tags[k][t]; el.classList.toggle("on",!!S.draft.tags[k][t]); },
+  rate:el=>submitRating(el.dataset.ev, el.dataset.ph),
+  rankview:async el=>{ S.rankView=el.dataset.v; if(S.rankView==="prev") S.prev=null; renderView(); },
+  cview:el=>{ S.cview=el.dataset.v; renderView(); },
+  clogout:councilLogout,
+  addopt:()=>{ S.draft.pollOpts.push(""); renderView(); }, rmopt:el=>{ S.draft.pollOpts.splice(+el.dataset.i,1); renderView(); },
+  createpoll:createPoll, createev:createEvent, savepin:savePin, saverewards:saveRewards,
+  pollstatus:el=>upd("polls",el.dataset.id,{status:el.dataset.v},el.dataset.v==="ended"?"ปิดโหวตแล้ว":"เปิดโหวตอีกครั้ง"),
+  delpoll:async el=>{ if(await ask({title:"ลบประชามตินี้?",body:"ผลโหวตทั้งหมดจะหายไป",ok:"ลบ",danger:true})) { try{ await deleteDoc(doc(db,"polls",el.dataset.id)); toast("ลบแล้ว"); }catch(e){ fail(e);} } },
+  delev:async el=>{ if(await ask({title:"ลบกิจกรรมนี้?",body:"คะแนนทั้งหมดจะหายไป",ok:"ลบ",danger:true})) { try{ await deleteDoc(doc(db,"events",el.dataset.id)); toast("ลบแล้ว"); }catch(e){ fail(e);} } },
+  evphase:el=>upd("events",el.dataset.id,{phase:el.dataset.v},"อัปเดตสถานะกิจกรรมแล้ว"),
+  evcomments:el=>openEvComments(el.dataset.id),
+  hide:el=>upd("ideas",el.dataset.id,{hidden:el.dataset.v==="1"},el.dataset.v==="1"?"ซ่อนโพสต์แล้ว":"แสดงโพสต์อีกครั้ง"),
+  rewarded:el=>upd("ideas",el.dataset.id,{rewarded:true},"บันทึกการมอบรางวัลแล้ว"),
+};
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-action]"); if(!el) return;
+  if(el.dataset.action==="ovclose"){ if(e.target===el) closeModal(); return; }
+  e.stopPropagation(); ACT[el.dataset.action]?.(el,e);
+});
+document.addEventListener("submit",e=>{
+  const f=e.target.closest("[data-form]"); if(!f) return; e.preventDefault();
+  ({ compose:submitIdea, edit:submitEdit, comment:submitComment, claim:claimReward, pin:councilLogin })[f.dataset.form]?.(f);
+});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="feedQ"){ S.q=t.value; updateFeedList(); return; }
+  if(t.dataset.draft){ S.draft[t.dataset.draft]=t.value; return; }
+  if(t.dataset.draftOpt!==undefined){ S.draft.pollOpts[+t.dataset.draftOpt]=t.value; return; }
+  if(t.dataset.draftC){ S.draft.compose[t.dataset.draftC]=t.value; const c=t.dataset.draftC==="title"?$("#cTc"):$("#cXc"); if(c) c.textContent=`${t.value.length}/${t.dataset.draftC==="title"?80:600}`; }
+});
+document.addEventListener("focusout",()=>{ setTimeout(()=>{ if(S.dirty && S.tab!=="feed" && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) renderView(); },150); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if($("#modal-root2").innerHTML){ $("#askNo")?.click(); } else if($("#modal-root").innerHTML) closeModal(); } });
+window.addEventListener("hashchange",()=>{ const m=location.hash.match(/idea=([A-Za-z0-9]+)/); if(m && db) openDetail(m[1]); });
 
-  app.innerHTML = `
-    ${renderHero()}
-    <div class="content">${body}</div>
-    ${renderBottomNav()}
-  `;
-  attachHandlers();
-}
-
-function attachHandlers(){
-  bind("postText","input",e=>{ state.draft.postText = e.target.value; });
-  bind("postName","input",e=>{ state.draft.postName = e.target.value; });
-  bind("postCat","change",e=>{ state.draft.postCat = e.target.value; });
-  bind("postBtn","click", addPost);
-  bind("feedFilterCat","change",e=>{ state.draft.feedFilterCat = e.target.value; updateFeedList(); });
-  bind("feedSearchInput","input",e=>{ state.draft.feedSearchText = e.target.value; updateFeedList(); });
-
-  bind("wishText","input",e=>{ state.draft.wishText = e.target.value; });
-  bind("wishBtn","click", addWish);
-
-  bind("pinInput","input",e=>{ state.draft.pinInput = e.target.value; });
-  bind("pinInput","keydown",e=>{ if(e.key==="Enter") tryUnlock(); });
-  bind("unlockBtn","click", tryUnlock);
-
-  bind("deadlineInput","change",e=>{ updateDeadline(e.target.value ? new Date(e.target.value).toISOString() : null); });
-  bind("pollTitle","input",e=>{ state.draft.pollTitle = e.target.value; });
-  document.querySelectorAll(".poll-opt").forEach(inp=>{
-    inp.addEventListener("input", e=>{ state.draft.pollOpts[Number(e.target.dataset.idx)] = e.target.value; });
-  });
-  bind("createPollBtn","click", addPoll);
-}
-
-/* ---------------- init ---------------- */
+/* =====================================================================
+   init
+   ===================================================================== */
 async function init(){
-  const [p,w,pl,s,m] = await Promise.all([
-    loadJSON("posts-data",true,{posts:[]}),
-    loadJSON("wishes-data",true,{wishes:[]}),
-    loadJSON("polls-data",true,{polls:[]}),
-    loadJSON("settings-data",true,{wishOpen:false,wishDeadline:null,councilPin:DEFAULT_PIN,lastResetMonth:null}),
-    loadJSON("my-interactions",false,{likedPosts:[],votedPolls:[],ratedPolls:[],myPosts:[]}),
-  ]);
-  state.posts = p.posts||[]; state.wishes = w.wishes||[]; state.polls = pl.polls||[];
-  state.settings = s; state.mine = m; if(!state.mine.myPosts) state.mine.myPosts = [];
-  if(!state.settings.lastResetMonth) state.settings.lastResetMonth = monthKey();
-  await checkMonthlyReset();
-  render();
+  buildNav(); renderView();
+  try{
+    const app=initializeApp(firebaseConfig); db=getFirestore(app); auth=getAuth(app);
+    await new Promise((res,rej)=>{ onAuthStateChanged(auth,u=>{ if(u){ S.uid=u.uid; res(); } }); signInAnonymously(auth).catch(rej); });
+    subscribeAll();
+    const m=location.hash.match(/idea=([A-Za-z0-9]+)/); if(m) openDetail(m[1]);
+    setInterval(()=>{ const r=roundInfo().id; if(r!==activeRound){ activeRound=r; S.ideas=[]; S.prev=null; S.loaded.ideas=false; subscribeIdeas(); renderView(); } else if(S.tab==="feed") updateHero(); },60000);
+  }catch(e){
+    console.error(e); S.loaded={ideas:true,polls:true,events:true};
+    $("#view").insertAdjacentHTML("afterbegin",`<div class="warnbar" style="margin-top:14px;">${ic("info")}<span>เชื่อมต่อฐานข้อมูลไม่ได้ ตรวจสอบอินเทอร์เน็ต และเปิด Anonymous sign-in ใน Firebase Authentication</span></div>`);
+    refresh();
+  }
 }
 init();
 </script>
