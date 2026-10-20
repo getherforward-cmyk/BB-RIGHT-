@@ -243,6 +243,10 @@ label.lbl{display:block;font-size:13.5px;font-weight:600;margin:14px 0 6px;color
 .steps li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:var(--ink2);}
 .steps li::before{content:counter(s);width:26px;height:26px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:700;display:grid;place-items:center;flex-shrink:0;font-size:13px;}
 
+.imgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.imgs img{width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--line);cursor:zoom-in;background:var(--surface2);}
+.thumb{position:relative;display:inline-block;}
+.thumb .icon-btn{position:absolute;top:4px;right:4px;width:28px;height:28px;background:var(--surface);border:1px solid var(--line);}
 /* ---------- council ---------- */
 .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
 @media (min-width:760px){ .tiles{grid-template-columns:repeat(4,1fr);} }
@@ -362,6 +366,8 @@ const LS = {
   get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch{ return d; } },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} },
 };
+const PTS = k => { const p=S.settings?.points; return (Array.isArray(p)&&p[k]!=null)?p[k]:CFG.POINTS[k]; };
+const rewardsDefault = () => `อันดับ 1 ได้ ${PTS(0)} แต้มบุญ · อันดับ 2 ได้ ${PTS(1)} แต้มบุญ · อันดับ 3 ได้ ${PTS(2)} แต้มบุญ พร้อมเกียรติบัตรจากสภานักเรียน`;
 const catOf = id => CATS.find(c=>c.id===id) || CATS[5];
 const fmtDate = ts => new Date(ts).toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});
 const fmtDT = ts => new Date(ts).toLocaleString("th-TH",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
@@ -502,7 +508,7 @@ const S = {
   ideas:[], prev:null, polls:[], events:[], settings:{}, me:{ upvoted:{}, votedPolls:{}, rated:{}, quota:{} },
   loaded:{}, online:true, modal:null, comments:[], council:false, email:null, members:[], cview:"overview", pollView:"donut", rankView:"cur",
   codes: LS.get("bb_codes",{}),
-  draft:{ pollTitle:"", pollDesc:"", pollOpts:["",""], evName:"", evDate:"", evDesc:"", stars:{}, tags:{}, rewards:null, memberEmail:"", compose:{title:"",text:"",cat:"study"} },
+  draft:{ pollTitle:"", pollDesc:"", pollOpts:["",""], evName:"", evDate:"", evDesc:"", stars:{}, tags:{}, rewards:null, memberEmail:"", pts:null, pollImgs:[], evImgs:[], compose:{title:"",text:"",cat:"study"} },
   dirty:false, lastComment:0,
 };
 let db, auth, unsubs = [], commentsUnsub = null, activeRound = roundInfo().id;
@@ -739,6 +745,7 @@ async function submitEdit(form){
 async function submitComment(form){
   const id=S.modal.id, inp=$("#cmText"), text=inp.value.trim();
   if(text.length<2) return;
+  if((getIdea(id)||S.modal.idea)?.noComments){ toast("สภาปิดคอมเมนต์โพสต์นี้แล้ว", true); return; }
   if(Date.now()-S.lastComment<15000){ toast("รอสักครู่ก่อนคอมเมนต์ถัดไป", true); return; }
   if(!(await passFilter(text))) return;
   try{
@@ -828,15 +835,15 @@ async function createPoll(){
   if(!title||opts.length<2){ toast("ใส่หัวข้อและตัวเลือกอย่างน้อย 2 ข้อ",true); return; }
   const options=opts.map((t,i)=>({id:"o"+(i+1),text:t})), counts={}; options.forEach(o=>counts[o.id]=0);
   try{
-    await setDoc(doc(collection(db,"polls")),{title,desc:S.draft.pollDesc.trim(),options,counts,status:"active",ts:Date.now()});
-    S.draft.pollTitle="";S.draft.pollDesc="";S.draft.pollOpts=["",""]; toast("เปิดประชามติแล้ว"); renderView();
+    await setDoc(doc(collection(db,"polls")),{title,desc:S.draft.pollDesc.trim(),options,counts,status:"active",ts:Date.now(),...(S.draft.pollImgs.length?{imgs:S.draft.pollImgs}:{})});
+    S.draft.pollTitle="";S.draft.pollDesc="";S.draft.pollOpts=["",""];S.draft.pollImgs=[]; toast("เปิดประชามติแล้ว"); renderView();
   }catch(e){ fail(e); }
 }
 async function createEvent(){
   const name=S.draft.evName.trim(); if(!name){ toast("ใส่ชื่อกิจกรรมก่อน",true); return; }
   try{
-    await setDoc(doc(collection(db,"events")),{name,desc:S.draft.evDesc.trim(),date:S.draft.evDate||null,phase:"before",ts:Date.now(),stats:{},tagc:{}});
-    S.draft.evName="";S.draft.evDesc="";S.draft.evDate=""; toast("สร้างแบบประเมินกิจกรรมแล้ว"); renderView();
+    await setDoc(doc(collection(db,"events")),{name,desc:S.draft.evDesc.trim(),date:S.draft.evDate||null,phase:"before",ts:Date.now(),stats:{},tagc:{},...(S.draft.evImgs.length?{imgs:S.draft.evImgs}:{})});
+    S.draft.evName="";S.draft.evDesc="";S.draft.evDate="";S.draft.evImgs=[]; toast("สร้างแบบประเมินกิจกรรมแล้ว"); renderView();
   }catch(e){ fail(e); }
 }
 const upd = (col,id,data,msg)=>updateDoc(doc(db,col,id),data).then(()=>msg&&toast(msg)).catch(fail);
@@ -847,6 +854,60 @@ async function saveRewards(){
 /* =====================================================================
    views
    ===================================================================== */
+/* ===== council extras: points / comments toggle / view votes / images ===== */
+async function savePoints(){
+  const a=[0,1,2].map(k=>Math.max(0,Math.round(+(S.draft.pts?S.draft.pts[k]:PTS(k))||0)));
+  try{ await setDoc(doc(db,"settings","main"),{points:a},{merge:true}); S.draft.pts=null; toast("บันทึกแต้มบุญแล้ว"); }catch(e){ fail(e); }
+}
+async function toggleComments(id){
+  const i=getIdea(id)||S.modal?.idea; if(!i) return; const v=!i.noComments;
+  try{ await updateDoc(doc(db,"ideas",id),{noComments:v}); i.noComments=v;
+    toast(v?"ปิดคอมเมนต์ของโพสต์นี้แล้ว":"เปิดคอมเมนต์อีกครั้งแล้ว");
+    if(S.modal?.type==="detail"&&S.modal.id===id){ showModal(detailHTML(i),true); renderComments(); }
+  }catch(e){ fail(e); }
+}
+async function openVotes(kind,id){
+  const isPoll=kind==="poll", item=isPoll?S.polls.find(p=>p.id===id):(getIdea(id)||S.modal?.idea);
+  S.modal={type:"votes",id};
+  showModal(`<div class="sheet-head"><h2 class="disp">👁️ ดูโหวต</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div><p class="muted">${esc(item?.title||"")}</p><div id="vtBody"><div class="sk"></div></div>`,true);
+  try{
+    const sn=await getDocs(collection(db,isPoll?"polls":"ideas",id,"votes"));
+    const rows=sn.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    const who=r=>`นิรนาม #${anonNo(anonTag(r.uid,id))}`;
+    const html=isPoll ? (item?.options||[]).map((o,k)=>{ const rs=rows.filter(r=>r.opt===o.id);
+        return `<div class="item" style="flex-direction:column;align-items:stretch;"><div class="row sb"><b>${esc(o.text)}</b><b>${rs.length}</b></div><small class="muted">${rs.length?rs.map(r=>`${who(r)} · ${timeAgo(r.ts)}`).join(" , "):"ยังไม่มีโหวต"}</small></div>`; }).join("")
+      : (rows.length?rows.map(r=>`<div class="item"><div>${who(r)}</div><small class="muted">${timeAgo(r.ts)}</small></div>`).join(""):'<p class="muted">ยังไม่มีโหวต</p>');
+    $("#vtBody").innerHTML=`<p class="hint">รวม ${rows.length} โหวต · แสดงเป็นรหัสนิรนาม ไม่เปิดเผยตัวตน</p>${html}`;
+  }catch(e){ fail(e); }
+}
+const MAX_IMGS=3;
+function compressImg(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onerror=rej; r.onload=()=>{ const im=new Image(); im.onerror=rej; im.onload=()=>{
+  const sc=Math.min(1,1000/Math.max(im.width,im.height)), c=document.createElement("canvas"); c.width=Math.round(im.width*sc); c.height=Math.round(im.height*sc);
+  const x=c.getContext("2d"); x.drawImage(im,0,0,c.width,c.height); let q=.8, d=c.toDataURL("image/jpeg",q);
+  while(d.length>150000&&q>.4){ q-=.1; d=c.toDataURL("image/jpeg",q); }
+  if(d.length>150000){ c.width=Math.round(c.width*.7); c.height=Math.round(c.height*.7); c.getContext("2d").drawImage(im,0,0,c.width,c.height); d=c.toDataURL("image/jpeg",.6); }
+  res(d); }; im.src=r.result; }; r.readAsDataURL(file); }); }
+async function readImgs(files,have){
+  const out=[]; for(const f of [...files]){ if(have+out.length>=MAX_IMGS){ toast(`ใส่รูปได้สูงสุด ${MAX_IMGS} รูป`,true); break; } if(!f.type.startsWith("image/")) continue; try{ out.push(await compressImg(f)); }catch{ toast("อ่านรูปไม่สำเร็จ",true); } } return out;
+}
+const imgsHTML=(arr,k,id)=>(arr&&arr.length)?`<div class="imgs">${arr.map((src,n)=>`<img src="${src}" alt="รูปประกอบ" loading="lazy" data-action="zoomimg" data-k="${k}" data-id="${id}" data-i="${n}">`).join("")}</div>`:"";
+const draftImgsHTML=k=>{ const a=S.draft[k+"Imgs"];
+  return `<label class="lbl">รูปประกอบ (ไม่บังคับ · สูงสุด ${MAX_IMGS} รูป)</label><div class="imgs" style="margin-top:0;">${a.map((src,n)=>`<span class="thumb"><img src="${src}" alt=""><button type="button" class="icon-btn small" data-action="rmdraftimg" data-k="${k}" data-i="${n}" aria-label="ลบรูป">${ic("x")}</button></span>`).join("")}</div>${a.length<MAX_IMGS?`<input type="file" accept="image/*" multiple data-imgpick="${k}" class="field" style="padding:8px;margin-top:8px;">`:""}`; };
+function openImgMgr(col,id){
+  const it=(col==="polls"?S.polls:S.events).find(x=>x.id===id); if(!it) return; S.modal={type:"img",col,id}; const a=it.imgs||[];
+  showModal(`<div class="sheet-head"><h2 class="disp">🖼️ รูปประกอบ</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div><p class="muted">${esc(it.title||it.name||"")}</p>
+  <div class="imgs">${a.map((src,n)=>`<span class="thumb"><img src="${src}" alt=""><button type="button" class="icon-btn small" data-action="rmimg" data-col="${col}" data-id="${id}" data-i="${n}" aria-label="ลบรูป">${ic("trash")}</button></span>`).join("")||'<p class="muted">ยังไม่มีรูป</p>'}</div>
+  ${a.length<MAX_IMGS?`<label class="lbl">เพิ่มรูป (สูงสุด ${MAX_IMGS} รูป)</label><input type="file" accept="image/*" multiple data-imgpick="${col}:${id}" class="field" style="padding:8px;">`:""}`);
+}
+document.addEventListener("change",async e=>{
+  const t=e.target, k=t.dataset?.imgpick; if(!k||!t.files||!t.files.length) return;
+  if(k==="poll"||k==="ev"){ const a=S.draft[k+"Imgs"]; a.push(...await readImgs(t.files,a.length)); t.value=""; renderView(); return; }
+  const [col,id]=k.split(":"), it=(col==="polls"?S.polls:S.events).find(x=>x.id===id); if(!it) return;
+  const add=await readImgs(t.files,(it.imgs||[]).length); if(!add.length) return;
+  const imgs=[...(it.imgs||[]),...add];
+  try{ await updateDoc(doc(db,col,id),{imgs}); it.imgs=imgs; openImgMgr(col,id); toast("เพิ่มรูปแล้ว"); }catch(er){ fail(er); }
+});
+
 function heroStats(){
   const r=roundInfo(), list=visible();
   return { ideas:list.length, votes:list.reduce((a,i)=>a+(i.votes||0),0), left:leftText(r.end) };
@@ -956,11 +1017,11 @@ function pollCard(p){
     return `<div class="res ${my===o.id?"mine":""}" style="--c:${c}"><span class="fill" style="width:${pct}%"></span><span><i class="dot"></i>${esc(o.text)}${my===o.id?" ✓":""}</span><b>${pct}% <small class="muted">(${v})</small></b></div>`; }).join("");
   return `<article class="card poll">
     <div class="row sb"><span class="chip ${ended?"":"ok"}">${ended?"ปิดโหวตแล้ว":"กำลังเปิดโหวต"}</span>${show&&!ended?'<span class="live">ผลแบบเรียลไทม์</span>':""}</div>
-    <h3 style="margin-top:10px;">${esc(p.title)}</h3>${p.desc?`<p class="muted" style="margin-top:4px;">${esc(p.desc)}</p>`:""}
+    <h3 style="margin-top:10px;">${esc(p.title)}</h3>${p.desc?`<p class="muted" style="margin-top:4px;">${esc(p.desc)}</p>`:""}${imgsHTML(p.imgs,"polls",p.id)}
     ${show ? `
       <div class="row" style="margin-top:12px;"><div class="seg" style="display:inline-flex;"><button class="${S.pollView==="donut"?"active":""}" data-action="pollview" data-v="donut">โดนัท</button><button class="${S.pollView==="bar"?"active":""}" data-action="pollview" data-v="bar">แท่ง</button></div></div>
       ${S.pollView==="donut" ? `<div class="donut-wrap" style="margin-top:12px;">${donutSVG(p)}<div>${legend}</div></div>` : `<div style="margin-top:6px;">${legend}</div>`}
-      <p class="hint">รวม ${tot} โหวต${!my&&!ended&&S.council?" · (คุณกำลังดูในโหมดสภา)":""}</p>`
+      <p class="hint">รวม ${tot} โหวต${!my&&!ended&&S.council?" · (คุณกำลังดูในโหมดสภา)":""}</p>${S.council?`<button class="btn line sm" data-action="pollvotes" data-id="${p.id}">👁️ ดูโหวต</button>`:""}`
     : `<div style="margin-top:6px;">${p.options.map(o=>`<button class="opt" data-action="vote" data-pid="${p.id}" data-oid="${o.id}"><span class="rad"></span>${esc(o.text)}</button>`).join("")}</div>
        <p class="hint">โหวตได้คนละ 1 ครั้ง ผลจะแสดงทันทีหลังโหวต · ไม่เปิดเผยตัวตน</p>`}
   </article>`;
@@ -995,7 +1056,7 @@ function eventCard(ev){
   if(b!=null && a!=null){ const d=a-b; delta=`<span class="delta ${d>=0?"up1":"dn"}">${d>=0?"▲":"▼"} ${Math.abs(d).toFixed(1)}</span>`; }
   return `<article class="card" id="ev-${ev.id}">
     <div class="row sb"><span class="chip ${ph==="closed"?"":"brand"}">${ph==="closed"?"ปิดรับแล้ว":"เปิดรับ: "+phaseLabel[ph]}</span>${ev.date?`<span class="muted" style="font-size:13.5px;">${ic("event")} ${fmtDate(new Date(ev.date).getTime())}</span>`:""}</div>
-    <h3 style="margin-top:10px;font-size:20px;">${esc(ev.name)}</h3>${ev.desc?`<p class="muted" style="margin-top:3px;">${esc(ev.desc)}</p>`:""}
+    <h3 style="margin-top:10px;font-size:20px;">${esc(ev.name)}</h3>${ev.desc?`<p class="muted" style="margin-top:3px;">${esc(ev.desc)}</p>`:""}${imgsHTML(ev.imgs,"events",ev.id)}
     ${canRate ? `<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px;">
         <b>${q}</b>${starsHTML(key)}
         ${ph==="after"?`<div class="tagrow">${EV_TAGS.map(([k,l])=>`<button type="button" class="tagbtn ${S.draft.tags[key]?.[k]?"on":""}" data-action="evtag" data-key="${key}" data-t="${k}">${l}</button>`).join("")}</div><p class="hint">เลือกสิ่งที่ประทับใจ (เลือกได้หลายข้อ)</p>`:""}
@@ -1026,12 +1087,12 @@ async function loadPrev(){
 }
 function rankView(){
   const r=roundInfo(), cur=S.rankView==="cur", list=cur?S.ideas:(S.prev||[]), top=rankedTop(list).filter(i=>(i.votes||0)>0).slice(0,3);
-  const finished=!cur, rewards=S.settings.rewardsText||CFG.DEFAULT_REWARDS;
+  const finished=!cur, rewards=S.settings.rewardsText||rewardsDefault();
   const pod=(i,k)=>{ const c=catOf(i.cat);
     return `<div class="pod p${k+1}"><div class="big">${["🥇","🥈","🥉"][k]}</div>
       <span class="chip cat" style="--c:${c.color};margin:0 auto;">${c.emoji} ${esc(c.short)}</span>
       <h3 data-action="open" data-id="${i.id}">${esc(i.title)}</h3>
-      <div class="v">▲ ${i.votes} โหวต</div><div class="pts">+${CFG.POINTS[k]} แต้มบุญ</div>
+      <div class="v">▲ ${i.votes} โหวต</div><div class="pts">+${PTS(k)} แต้มบุญ</div>
       ${finished ? (i.claimedAt&&i.rewarded?`<span class="chip ok" style="margin:6px auto 0;">${ic("check")} รับรางวัลแล้ว</span>`:`<button class="btn soft sm" style="margin-top:6px;" data-action="claim" data-id="${i.id}" data-rank="${k+1}">🎁 ฉันเป็นเจ้าของ รับรางวัล</button>`) : `<span class="muted" style="font-size:13px;margin-top:4px;">ลุ้นกันต่อ ประกาศผลเมื่อจบรอบ</span>`}
     </div>`; };
   return `<div class="page-head"><div><h2>🏆 Leaderboard & รางวัล</h2><p>3 ข้อเสนอที่ได้ Upvote สูงสุดประจำ 2 สัปดาห์</p></div>
@@ -1080,34 +1141,38 @@ function cPolls(){
     <label class="lbl">หัวข้อ</label><input class="field" data-draft="pollTitle" value="${esc(S.draft.pollTitle)}" placeholder="เช่น ทรงผมนักเรียน ควรผ่อนปรนไหม" maxlength="120">
     <label class="lbl">รายละเอียด (ไม่บังคับ)</label><input class="field" data-draft="pollDesc" value="${esc(S.draft.pollDesc)}" maxlength="200">
     <label class="lbl">ตัวเลือก</label><div class="stack" style="gap:8px;">${S.draft.pollOpts.map((o,i)=>`<div class="row" style="flex-wrap:nowrap;"><input class="field" data-draft-opt="${i}" value="${esc(o)}" placeholder="ตัวเลือกที่ ${i+1}" maxlength="80">${S.draft.pollOpts.length>2?`<button class="icon-btn" data-action="rmopt" data-i="${i}" aria-label="ลบตัวเลือก">${ic("x")}</button>`:""}</div>`).join("")}</div>
-    <div class="row" style="margin-top:12px;">${S.draft.pollOpts.length<6?`<button class="btn line sm" data-action="addopt">${ic("plus")} เพิ่มตัวเลือก</button>`:""}<button class="btn primary sm" data-action="createpoll" style="margin-left:auto;">${ic("send")} เปิดโหวต</button></div></div>
-  <div class="card"><h3>ประชามติทั้งหมด</h3>${S.polls.length?S.polls.map(p=>`<div class="item"><div><div class="tt">${esc(p.title)}</div><small class="muted">${pollTotal(p)} โหวต · ${p.status==="ended"?"ปิดแล้ว":"เปิดอยู่"}</small></div>
-    <div class="row" style="flex-wrap:nowrap;">${p.status==="ended"?`<button class="btn line sm" data-action="pollstatus" data-id="${p.id}" data-v="active">เปิดอีกครั้ง</button>`:`<button class="btn line sm" data-action="pollstatus" data-id="${p.id}" data-v="ended">ปิดโหวต</button>`}<button class="icon-btn" data-action="delpoll" data-id="${p.id}" aria-label="ลบ">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มี</p>'}</div>`;
+    ${draftImgsHTML("poll")}<div class="row" style="margin-top:12px;">${S.draft.pollOpts.length<6?`<button class="btn line sm" data-action="addopt">${ic("plus")} เพิ่มตัวเลือก</button>`:""}<button class="btn primary sm" data-action="createpoll" style="margin-left:auto;">${ic("send")} เปิดโหวต</button></div></div>
+  <div class="card"><h3>ประชามติทั้งหมด</h3>${S.polls.length?S.polls.map(p=>`<div class="item" style="flex-direction:column;align-items:stretch;"><div><div class="tt">${esc(p.title)}</div><small class="muted">${pollTotal(p)} โหวต · ${p.status==="ended"?"ปิดแล้ว":"เปิดอยู่"}</small></div>
+    <div class="row" style="flex-wrap:wrap;">${p.status==="ended"?`<button class="btn line sm" data-action="pollstatus" data-id="${p.id}" data-v="active">เปิดอีกครั้ง</button>`:`<button class="btn line sm" data-action="pollstatus" data-id="${p.id}" data-v="ended">ปิดโหวต</button>`}<button class="btn line sm" data-action="pollvotes" data-id="${p.id}">👁️ ดูโหวต</button><button class="btn line sm" data-action="imgmgr" data-col="polls" data-id="${p.id}">🖼️ รูป${(p.imgs||[]).length?" ("+p.imgs.length+")":""}</button><button class="icon-btn" data-action="delpoll" data-id="${p.id}" aria-label="ลบ">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มี</p>'}</div>`;
 }
 function cEvents(){
   return `<div class="card"><h3>สร้างแบบประเมินกิจกรรม</h3>
     <label class="lbl">ชื่อกิจกรรม</label><input class="field" data-draft="evName" value="${esc(S.draft.evName)}" placeholder="เช่น กีฬาสี 2569" maxlength="100">
     <label class="lbl">วันที่จัดงาน</label><input class="field" type="date" data-draft="evDate" value="${esc(S.draft.evDate)}">
     <label class="lbl">รายละเอียด (ไม่บังคับ)</label><input class="field" data-draft="evDesc" value="${esc(S.draft.evDesc)}" maxlength="200">
-    <div style="margin-top:12px;text-align:right;"><button class="btn primary sm" data-action="createev">${ic("plus")} สร้าง</button></div></div>
+    ${draftImgsHTML("ev")}<div style="margin-top:12px;text-align:right;"><button class="btn primary sm" data-action="createev">${ic("plus")} สร้าง</button></div></div>
   <div class="card"><h3>กิจกรรมทั้งหมด</h3>${S.events.length?S.events.map(ev=>`<div class="item" style="flex-direction:column;align-items:stretch;"><div class="row sb"><div class="tt">${esc(ev.name)}</div><span class="chip">${ev.phase==="closed"?"ปิด":"เปิด: "+phaseLabel[ev.phase||"before"]}</span></div>
     <small class="muted">ก่อนงาน ${evAvg(ev,"before")?.toFixed(1)??"–"} (${ev.stats?.before?.n||0} คน) · หลังงาน ${evAvg(ev,"after")?.toFixed(1)??"–"} (${ev.stats?.after?.n||0} คน)</small>
     <div class="row" style="margin-top:8px;"><div class="seg phase">${["before","after","closed"].map(p=>`<button class="${(ev.phase||"before")===p?"active":""}" data-action="evphase" data-id="${ev.id}" data-v="${p}">${p==="closed"?"ปิดรับ":"รับ"+phaseLabel[p]}</button>`).join("")}</div>
-    <button class="btn line sm" data-action="evcomments" data-id="${ev.id}">💬 ความเห็น</button><button class="icon-btn" data-action="delev" data-id="${ev.id}" aria-label="ลบ">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มี</p>'}</div>`;
+    <button class="btn line sm" data-action="evcomments" data-id="${ev.id}">💬 ความเห็น</button><button class="btn line sm" data-action="imgmgr" data-col="events" data-id="${ev.id}">🖼️ รูป${(ev.imgs||[]).length?" ("+ev.imgs.length+")":""}</button><button class="icon-btn" data-action="delev" data-id="${ev.id}" aria-label="ลบ">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มี</p>'}</div>`;
 }
 function cPosts(){
   const list=[...S.ideas].sort((a,b)=>b.ts-a.ts);
   return `<div class="card"><h3>โพสต์ในรอบนี้ (${list.length})</h3><p class="hint">ซ่อนโพสต์ได้ (กู้คืนได้) หรือลบถาวร (คะแนนและคอมเมนต์หายทั้งหมด) · ผู้ชนะที่รับรางวัลแล้วให้กด “มอบรางวัลแล้ว”</p>
-  ${list.length?list.map(i=>`<div class="item ${i.hidden?"hidden-post":""}"><div style="min-width:0;"><div class="tt" data-action="open" data-id="${i.id}" style="cursor:pointer;">${esc(i.title)}</div>
+  ${list.length?list.map(i=>`<div class="item ${i.hidden?"hidden-post":""}" style="flex-direction:column;align-items:stretch;"><div style="min-width:0;"><div class="tt" data-action="open" data-id="${i.id}" style="cursor:pointer;">${esc(i.title)}</div>
     <small class="muted">▲ ${i.votes||0} · ${timeAgo(i.ts)}${i.claimedAt?" · ขอรับรางวัลแล้ว":""}${i.rewarded?" · มอบรางวัลแล้ว":""}</small></div>
-    <div class="row" style="flex-wrap:nowrap;">${i.claimedAt&&!i.rewarded?`<button class="btn soft sm" data-action="rewarded" data-id="${i.id}">มอบรางวัลแล้ว</button>`:""}
-    <button class="btn line sm" data-action="hide" data-id="${i.id}" data-v="${i.hidden?0:1}">${i.hidden?"แสดง":"ซ่อน"}</button><button class="icon-btn" data-action="delidea" data-id="${i.id}" aria-label="ลบถาวร">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีโพสต์</p>'}</div>`;
+    <div class="row" style="flex-wrap:wrap;">${i.claimedAt&&!i.rewarded?`<button class="btn soft sm" data-action="rewarded" data-id="${i.id}">มอบรางวัลแล้ว</button>`:""}
+    <button class="btn line sm" data-action="togglecm" data-id="${i.id}">${i.noComments?"เปิดคอมเมนต์":"ปิดคอมเมนต์"}</button><button class="btn line sm" data-action="ideavotes" data-id="${i.id}">ดูโหวต</button><button class="btn line sm" data-action="hide" data-id="${i.id}" data-v="${i.hidden?0:1}">${i.hidden?"แสดง":"ซ่อน"}</button><button class="icon-btn" data-action="delidea" data-id="${i.id}" aria-label="ลบถาวร">${ic("trash")}</button></div></div>`).join(""):'<p class="muted" style="margin-top:8px;">ยังไม่มีโพสต์</p>'}</div>`;
 }
 function cSettings(){
-  return `<div class="card"><h3>👥 สมาชิกสภา</h3><p class="hint">สมาชิกทุกคนในรายชื่อเข้าโหมดสภาได้ด้วยบัญชี Google ของตัวเอง ไม่ต้องใช้รหัสผ่านร่วมกัน</p>
+  return `<div class="card"><h3>🏅 แต้มบุญรางวัล</h3><p class="hint">กำหนดแต้มของอันดับ 1–3 มีผลกับหน้า Leaderboard และหน้ายืนยันสิทธิ์ทันที</p>
+    <div class="row" style="flex-wrap:nowrap;margin-top:8px;">${[0,1,2].map(k=>`<div style="flex:1;min-width:0;"><label class="lbl">${["🥇","🥈","🥉"][k]} อันดับ ${k+1}</label><input class="field" type="number" inputmode="numeric" min="0" max="9999" data-draft-pts="${k}" value="${S.draft.pts?S.draft.pts[k]:PTS(k)}"></div>`).join("")}</div>
+    <div style="text-align:right;margin-top:10px;"><button class="btn primary sm" data-action="savepts">บันทึกแต้ม</button></div>
+    <p class="hint">ถ้าเคยแก้ “ข้อความรางวัล” เอง ให้แก้ตัวเลขในข้อความด้านล่างให้ตรงกันด้วย</p></div>
+  <div class="card"><h3>👥 สมาชิกสภา</h3><p class="hint">สมาชิกทุกคนในรายชื่อเข้าโหมดสภาได้ด้วยบัญชี Google ของตัวเอง ไม่ต้องใช้รหัสผ่านร่วมกัน</p>
     <div style="margin-top:6px;">${S.members.length?S.members.map(m=>`<div class="item"><div class="tt" style="word-break:break-all;">${esc(m.email)}${m.email===S.email?' <span class="chip brand">คุณ</span>':""}</div><button class="icon-btn" data-action="rmmember" data-email="${esc(m.email)}" aria-label="ลบสมาชิก">${ic("trash")}</button></div>`).join(""):'<p class="muted">กำลังโหลด...</p>'}</div>
     <div class="row" style="margin-top:12px;flex-wrap:nowrap;"><input class="field" type="email" data-draft="memberEmail" value="${esc(S.draft.memberEmail)}" placeholder="อีเมล Google ของสมาชิกใหม่" autocomplete="off"><button class="btn primary sm" data-action="addmember">เพิ่ม</button></div></div>
-  <div class="card"><h3>ข้อความรางวัล (หน้า Leaderboard)</h3><textarea class="field" rows="3" data-draft="rewards" style="margin-top:10px;min-height:80px;">${esc(S.draft.rewards??S.settings.rewardsText??CFG.DEFAULT_REWARDS)}</textarea>
+  <div class="card"><h3>ข้อความรางวัล (หน้า Leaderboard)</h3><textarea class="field" rows="3" data-draft="rewards" style="margin-top:10px;min-height:80px;">${esc(S.draft.rewards??S.settings.rewardsText??rewardsDefault())}</textarea>
     <div style="text-align:right;margin-top:10px;"><button class="btn primary sm" data-action="saverewards">บันทึก</button></div></div>`;
 }
 
@@ -1168,16 +1233,17 @@ function detailHTML(i){
     <button class="up ${on?"on":""}" id="dUp" data-action="upvote" data-id="${i.id}">${ic("up")}<span id="dVotes">${i.votes||0}</span></button>
     ${(i.history||[]).length?`<button class="btn line sm" data-action="history" data-id="${i.id}">📜 ดูประวัติการแก้ไข</button>`:""}
     ${left>0?`<button class="btn line sm" data-action="edit" data-id="${i.id}">${ic("edit")} แก้ไข · เหลือ ${Math.ceil(left/60000)} นาที</button>`:""}
+    ${S.council?`<button class="btn line sm" data-action="ideavotes" data-id="${i.id}">👁️ ดูโหวต</button><button class="btn line sm" data-action="togglecm" data-id="${i.id}">${i.noComments?"💬 เปิดคอมเมนต์":"🚫 ปิดคอมเมนต์"}</button>`:""}
     <button class="btn danger sm" data-action="delidea" data-id="${i.id}" style="margin-left:auto;">${ic("trash")} ลบโพสต์</button>
   </div>
   <h3 style="margin:22px 0 4px;font-size:17px;">💬 ความคิดเห็น <span class="muted" id="dCmCount">(${i.comments||0})</span></h3>
   <div id="dComments"></div>
-  <form data-form="comment" class="row" style="flex-wrap:nowrap;margin-top:10px;"><input id="cmText" class="field" maxlength="300" placeholder="แสดงความเห็นแบบไม่ระบุตัวตน..." autocomplete="off"><button class="btn primary" type="submit" aria-label="ส่ง">${ic("send")}</button></form>`;
+  ${i.noComments?`<div class="warnbar" style="margin-top:10px;">${ic("lock")}<span>สภาปิดการแสดงความคิดเห็นของโพสต์นี้แล้ว</span></div>`:`<form data-form="comment" class="row" style="flex-wrap:nowrap;margin-top:10px;"><input id="cmText" class="field" maxlength="300" placeholder="แสดงความเห็นแบบไม่ระบุตัวตน..." autocomplete="off"><button class="btn primary" type="submit" aria-label="ส่ง">${ic("send")}</button></form>`}`;
 }
 function renderComments(){
   const el=$("#dComments"); if(!el) return; const i=getIdea(S.modal.id);
   el.innerHTML = S.comments.length ? S.comments.map(c=>`<div class="cm"><div class="av">${anonFace(c.a||c.id)}</div><div style="min-width:0;flex:1;"><div class="who"><b>นิรนาม #${anonNo(c.a||c.id)}</b>${i&&c.a===i.a?'<span class="chip brand" style="padding:1px 8px;font-size:11.5px;">ผู้เสนอ</span>':""}<span>${timeAgo(c.ts)}</span>${S.council?`<button class="icon-btn small" data-action="delcm" data-id="${c.id}" aria-label="ลบ">${ic("trash")}</button>`:""}</div><p>${esc(c.text)}</p></div></div>`).join("")
-    : '<p class="muted" style="padding:12px 0;font-size:14.5px;">ยังไม่มีความคิดเห็น เป็นคนแรกเลย</p>';
+    : `<p class="muted" style="padding:12px 0;font-size:14.5px;">${i&&i.noComments?"ยังไม่มีความคิดเห็น":"ยังไม่มีความคิดเห็น เป็นคนแรกเลย"}</p>`;
   const cc=$("#dCmCount"); if(cc) cc.textContent=`(${S.comments.length})`;
 }
 async function openDetail(id){
@@ -1227,7 +1293,7 @@ function openClaim(id, rank){
 }
 function showVoucher(i, rank, ts){
   showModal(`<div class="sheet-head"><h2 class="disp">✅ ยืนยันสิทธิ์แล้ว</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div>
-  <div class="voucher"><div style="font-size:42px;">${["🥇","🥈","🥉"][(rank||1)-1]}</div><b>+${CFG.POINTS[(rank||1)-1]} แต้มบุญ</b>
+  <div class="voucher"><div style="font-size:42px;">${["🥇","🥈","🥉"][(rank||1)-1]}</div><b>+${PTS((rank||1)-1)} แต้มบุญ</b>
     <div style="margin-top:6px;">${esc(i.title)}</div><div style="font-size:13px;color:#BCD0E6;margin-top:8px;">รหัสอ้างอิง ${esc(i.id.slice(0,8).toUpperCase())} · ยืนยันเมื่อ ${fmtDT(ts)}</div></div>
   <p class="hint" style="margin-top:12px;text-align:center;">แสดงหน้าจอนี้ให้สภานักเรียน เพื่อรับรางวัล</p>`);
 }
@@ -1281,6 +1347,14 @@ const ACT = {
   evcomments:el=>openEvComments(el.dataset.id),
   hide:el=>upd("ideas",el.dataset.id,{hidden:el.dataset.v==="1"},el.dataset.v==="1"?"ซ่อนโพสต์แล้ว":"แสดงโพสต์อีกครั้ง"),
   rewarded:el=>upd("ideas",el.dataset.id,{rewarded:true},"บันทึกการมอบรางวัลแล้ว"),
+  savepts:savePoints, togglecm:el=>toggleComments(el.dataset.id),
+  ideavotes:el=>openVotes("idea",el.dataset.id), pollvotes:el=>openVotes("poll",el.dataset.id),
+  imgmgr:el=>openImgMgr(el.dataset.col,el.dataset.id),
+  rmdraftimg:el=>{ S.draft[el.dataset.k+"Imgs"].splice(+el.dataset.i,1); renderView(); },
+  rmimg:async el=>{ const col=el.dataset.col,id=el.dataset.id,it=(col==="polls"?S.polls:S.events).find(x=>x.id===id); if(!it) return;
+    const imgs=(it.imgs||[]).filter((_,n)=>n!==+el.dataset.i); try{ await updateDoc(doc(db,col,id),{imgs}); it.imgs=imgs; openImgMgr(col,id); }catch(e){ fail(e); } },
+  zoomimg:el=>{ const it=(el.dataset.k==="polls"?S.polls:S.events).find(x=>x.id===el.dataset.id); const src=it?.imgs?.[+el.dataset.i]; if(!src) return;
+    S.modal={type:"zoom"}; showModal(`<div class="sheet-head"><h2 class="disp">🖼️ รูปประกอบ</h2><button class="icon-btn" data-action="close" aria-label="ปิด">${ic("x")}</button></div><img src="${src}" alt="" style="width:100%;border-radius:14px;">`,true); },
 };
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-action]"); if(!el) return;
@@ -1294,6 +1368,7 @@ document.addEventListener("submit",e=>{
 document.addEventListener("input",e=>{
   const t=e.target;
   if(t.id==="feedQ"){ S.q=t.value; updateFeedList(); return; }
+  if(t.dataset.draftPts!==undefined){ S.draft.pts??=[0,1,2].map(PTS); S.draft.pts[+t.dataset.draftPts]=t.value; return; }
   if(t.dataset.draft){ S.draft[t.dataset.draft]=t.value; return; }
   if(t.dataset.draftOpt!==undefined){ S.draft.pollOpts[+t.dataset.draftOpt]=t.value; return; }
   if(t.dataset.draftC){ S.draft.compose[t.dataset.draftC]=t.value; const c=t.dataset.draftC==="title"?$("#cTc"):$("#cXc"); if(c) c.textContent=`${t.value.length}/${t.dataset.draftC==="title"?80:600}`; }
